@@ -32,3 +32,38 @@ document.querySelectorAll('.nav__list a').forEach((link) => {
   link.setAttribute('aria-label', label); // экранные читалки читают целое слово, а не буквы
   link.replaceChildren(roll);
 });
+
+
+// Слайдшоу в hero: картинки внутри [data-slideshow] сменяют друг друга по кругу.
+// Чтобы добавить кадр, достаточно добавить ещё один <img> внутрь этого блока в index.html.
+// Интервал задаётся в миллисекундах в data-interval.
+document.querySelectorAll('[data-slideshow]').forEach((box) => {
+  const slides = [...box.querySelectorAll('img')];
+  if (slides.length < 2) return;
+
+  // Людям с отключёнными анимациями в системе не крутим картинки сами
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+  const interval = Number(box.dataset.interval) || 2500;
+  let current = slides.findIndex((img) => img.classList.contains('is-active'));
+  if (current < 0) current = 0;
+  let timer = null;
+
+  const show = (next) => {
+    slides[current].classList.remove('is-active');
+    current = next;
+    slides[current].classList.add('is-active');
+  };
+
+  const start = () => {
+    if (!timer) timer = setInterval(() => show((current + 1) % slides.length), interval);
+  };
+  const stop = () => {
+    clearInterval(timer);
+    timer = null;
+  };
+
+  // Пока вкладка скрыта, не крутим
+  document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
+  start();
+});

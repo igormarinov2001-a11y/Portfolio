@@ -256,8 +256,8 @@ img {
 .roll__char {
   display: flex;
   flex-direction: column;
-  transition: transform 0.4s cubic-bezier(0.76, 0, 0.24, 1);
-  transition-delay: calc(var(--i) * 15ms);
+  transition: transform 0.32s cubic-bezier(0.76, 0, 0.24, 1);
+  transition-delay: calc(var(--i) * 12ms);
 }
 
 .roll__char > span {
@@ -330,10 +330,23 @@ img {
   padding-right: 0.05em; /* компенсирует отрицательный трекинг после последней буквы, чтобы слово стояло по центру */
 }
 
-/* Картинка-мокап между словами */
-.hero__mockup {
+/* Картинка между словами. Внутри несколько кадров, активный показан, остальные скрыты;
+   скрипт js/main.js переключает их каждые пару секунд. */
+.hero__slides {
+  display: grid;
   width: 20.625vw;
   margin: calc(28 * var(--u)) 0 calc(30 * var(--u));
+}
+
+.hero__slides img {
+  grid-area: 1 / 1; /* все кадры лежат друг на друге в одной ячейке */
+  width: 100%;
+  opacity: 0;
+  transition: opacity var(--slide-fade, 0s);
+}
+
+.hero__slides img.is-active {
+  opacity: 1;
 }
 
 .hero__actions {
@@ -444,7 +457,7 @@ img {
     line-height: 1;
   }
 
-  .hero__mockup {
+  .hero__slides {
     width: 60vw;
   }
 
