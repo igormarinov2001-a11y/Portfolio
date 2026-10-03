@@ -69,41 +69,116 @@ document.querySelectorAll('[data-slideshow]').forEach((box) => {
 });
 
 
-// Градиентный блок под hero: при скролле растёт от узкой полоски до полного экрана.
-// Прогресс --p (0…1) зависит от того, как высоко блок поднялся над нижним краем экрана.
-// Движение слегка сглаживается (догоняет скролл), чтобы не дёргалось.
+// Градиент, накрывающий хиро. Блок закреплён на экране; пока скролл проходит
+// «reveal-distance» (высота пустого блока .reveal), он поднимается снизу и растёт до полного
+// экрана, закрывая хиро, а дальше уезжает вверх вместе со страницей и стыкуется с About.
+// --p (0…1) — насколько блок раскрыт, --y — его положение по вертикали.
 document.querySelectorAll('[data-reveal]').forEach((reveal) => {
+  const hero = document.querySelector('.hero');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const SMOOTHING = reduceMotion ? 1 : 0.15; // 1 = без сглаживания, меньше = плавнее
   const PEEK = 0.103; // доля высоты экрана, на которую блок выглядывает в начале (как в CSS)
-  const SPEED = 1.8; // во сколько раз быстрее, чем «1 к 1», раскрывается блок (больше = быстрее)
 
-  let current = 0;
+  let current = 0; // сглаженный прогресс раскрытия
   let target = 0;
   let frame = null;
+  let distance = 1; // сколько скроллить до полного раскрытия
+  let extra = 0; // на сколько хиро выше экрана (на маленьких экранах)
+  let start = 0; // положение верха блока в самом начале
 
   const measure = () => {
-    const start = window.innerHeight * (1 - PEEK); // положение верха блока при scroll = 0
-    const progress = (1 - reveal.getBoundingClientRect().top / start) * SPEED;
-    target = Math.min(1, Math.max(0, progress));
+    distance = reveal.offsetHeight || 1;
+    extra = Math.max(0, hero.offsetHeight - window.innerHeight);
+    start = window.innerHeight * (1 - PEEK);
+  };
+
+  const render = () => {
+    const sigma = window.scrollY - extra; // скролл, отсчитанный от момента, когда низ хиро у низа экрана
+    const y = (1 - current) * start + Math.max(0, -sigma) - Math.max(0, sigma - distance);
+    reveal.style.setProperty('--p', current.toFixed(4));
+    reveal.style.setProperty('--y', `${y.toFixed(1)}px`);
   };
 
   const tick = () => {
     current += (target - current) * SMOOTHING;
     if (Math.abs(target - current) < 0.0005) current = target;
-    reveal.style.setProperty('--p', current.toFixed(4));
+    render();
     frame = current === target ? null : requestAnimationFrame(tick);
   };
 
   const update = () => {
-    measure();
+    target = Math.min(1, Math.max(0, (window.scrollY - extra) / distance));
+    render();
     if (!frame) frame = requestAnimationFrame(tick);
   };
 
   measure();
+  target = Math.min(1, Math.max(0, (window.scrollY - extra) / distance));
   current = target; // при перезагрузке страницы посреди скролла сразу ставим нужный размер
-  reveal.style.setProperty('--p', current.toFixed(4));
+  render();
 
   window.addEventListener('scroll', update, { passive: true });
-  window.addEventListener('resize', update);
+  window.addEventListener('resize', () => {
+    measure();
+    update();
+  });
+});
+
+
+// Текст в About: слова серые (белый 50%) и по мере скролла по очереди заполняются белым,
+// как субтитры. Каждое слово загорается плавно, соседние немного перекрываются.
+document.querySelectorAll('[data-scrub]').forEach((block) => {
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // остаётся белым
+
+  const START_AT = 0.85; // начинаем, когда верх текста поднялся до 85% высоты экрана
+  const END_AT = 0.6; // заканчиваем, когда низ текста поднялся до 60% высоты экрана
+  const OVERLAP = 2; // сколько слов «горят» одновременно (больше = плавнее волна)
+
+  const words = [];
+  block.querySelectorAll('.line').forEach((line) => {
+    const parts = line.textContent.trim().split(/\s+/);
+    line.textContent = '';
+    parts.forEach((text, i) => {
+      const word = document.createElement('span');
+      word.className = 'word';
+      word.textContent = text;
+      word.style.setProperty('--a', '0.5');
+      line.append(word);
+      if (i < parts.length - 1) line.append(' ');
+      words.push(word);
+    });
+  });
+
+  let startScroll = 0;
+  let endScroll = 1;
+  let frame = null;
+
+  const measure = () => {
+    const top = block.getBoundingClientRect().top + window.scrollY;
+    const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+    startScroll = top - window.innerHeight * START_AT;
+    endScroll = Math.min(top + block.offsetHeight - window.innerHeight * END_AT, maxScroll);
+    if (endScroll <= startScroll + 1) endScroll = startScroll + 1;
+  };
+
+  const render = () => {
+    frame = null;
+    const q = Math.min(1, Math.max(0, (window.scrollY - startScroll) / (endScroll - startScroll)));
+    words.forEach((word, i) => {
+      const local = Math.min(1, Math.max(0, (q * (words.length - 1 + OVERLAP) - i) / OVERLAP));
+      word.style.setProperty('--a', (0.5 + 0.5 * local).toFixed(3));
+    });
+  };
+
+  const update = () => {
+    if (!frame) frame = requestAnimationFrame(render);
+  };
+
+  measure();
+  render();
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', () => {
+    measure();
+    update();
+  });
 });
