@@ -157,7 +157,7 @@ img {
 
 .btn {
   position: relative;
-  isolation: isolate; /* заливка ниже лежит под текстом кнопки, но над её фоном */
+  isolation: isolate; /* заливка ::before лежит под текстом кнопки, но над её фоном */
   overflow: hidden;
   display: inline-flex;
   align-items: center;
@@ -168,29 +168,38 @@ img {
   font-size: max(12px, calc(15 * var(--u)));
   line-height: 1;
   white-space: nowrap;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  /* Цвет текста переключается быстро и ровно тогда, когда заливка доходит
+     до середины кнопки (0.2s из 0.4s), иначе на полпути он становится серым. */
+  transition: color 0.1s linear 0.15s;
 }
 
-/* Главная кнопка (белая). При наведении синяя заливка поднимается снизу вверх,
-   текст и стрелка становятся белыми. */
-.btn--light {
-  background: var(--color-text);
-  color: var(--color-bg);
-  /* Цвет текста переключается быстро и ровно тогда, когда заливка доходит до середины кнопки (0.2s из 0.4s) */
-  transition: color 0.1s linear 0.15s, border-color 0.4s cubic-bezier(0.65, 0, 0.35, 1);
-}
-
-.btn--light::before {
+/* При наведении снизу вверх поднимается заливка (цвет задан у каждой кнопки ниже),
+   а цвет текста и стрелки меняется. */
+.btn::before {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: var(--color-accent);
+  background: var(--btn-fill);
   transform: translateY(100%);
   transition: transform 0.4s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
+/* Главная кнопка: белая, без обводки, при наведении заливается синим.
+   Обводки нет, поэтому отступ на 1px больше, чем у кнопки с обводкой: размер тот же. */
+.btn--light {
+  --btn-fill: var(--color-accent);
+  --btn-hover-color: var(--color-text);
+  padding: 0 calc(17 * var(--u));
+  border: 0;
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+
+/* Второстепенная кнопка: с белой обводкой, при наведении заливается белым. */
 .btn--outline {
+  --btn-fill: var(--color-text);
+  --btn-hover-color: var(--color-bg);
   background: transparent;
   color: var(--color-text);
 }
@@ -202,31 +211,23 @@ img {
 }
 
 /* То же при переходе с клавиатуры (Tab) */
-.btn--light:focus-visible {
-  border-color: var(--color-accent);
-  color: var(--color-text);
+.btn:focus-visible {
+  color: var(--btn-hover-color);
 }
 
-.btn--light:focus-visible::before {
+.btn:focus-visible::before {
   transform: translateY(0);
 }
 
 @media (hover: hover) {
-  .btn--light:hover {
-    border-color: var(--color-accent);
-    color: var(--color-text);
+  .btn:hover {
+    color: var(--btn-hover-color);
   }
 
-  .btn--light:hover::before {
+  .btn:hover::before {
     transform: translateY(0);
   }
-
-  .btn--outline:hover {
-    background: var(--color-text);
-    color: var(--color-bg);
-  }
 }
-
 
 /* ==========================================================================
    6. Шапка
@@ -308,8 +309,8 @@ img {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .btn--light,
-  .btn--light::before {
+  .btn,
+  .btn::before {
     transition: none;
   }
 
