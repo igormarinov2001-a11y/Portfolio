@@ -76,7 +76,7 @@ document.querySelectorAll('[data-slideshow]').forEach((box) => {
 document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   const hero = document.querySelector('.hero');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const SMOOTHING = reduceMotion ? 1 : 0.15; // 1 = без сглаживания, меньше = плавнее
+  const SMOOTHING = reduceMotion ? 1 : 0.22; // 1 = без сглаживания, меньше = плавнее (но и мягче)
   const PEEK = 0.103; // доля высоты экрана, на которую блок выглядывает в начале (как в CSS)
 
   let current = 0; // сглаженный прогресс раскрытия

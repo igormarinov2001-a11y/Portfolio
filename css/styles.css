@@ -51,6 +51,7 @@
   --color-muted-dash: #676767; /* серый тире между номером и названием */
   --color-line: #1a1a1a;       /* вертикальные линии сетки */
   --color-accent: #2b3bff;     /* заливка главной кнопки при наведении */
+  --color-text-dim: rgb(255 255 255 / 0.4); /* приглушённый белый: 40% */
 
   /* Шрифты */
   --font-sans: "Uncut Sans", system-ui, sans-serif;
@@ -451,7 +452,7 @@ img {
   --y: 89.7svh;           /* запасное значение, если скрипт не загрузился: блок выглядывает снизу */
   --w0: 32vw;             /* ширина в начале */
   --h0: 18vw;             /* высота в начале (16:9 от ширины) */
-  --reveal-distance: 40svh; /* сколько нужно проскроллить, чтобы градиент закрыл экран */
+  --reveal-distance: 32svh; /* сколько нужно проскроллить, чтобы градиент закрыл экран */
   position: relative;
   height: var(--reveal-distance);
 }
@@ -524,6 +525,13 @@ img {
   font-size: max(14px, calc(24 * var(--u)));
   line-height: 1.2;
   letter-spacing: -0.01em;
+  color: var(--color-text-dim);
+}
+
+/* Выделенная фраза: полностью белая и жирнее остального текста */
+.about__note strong {
+  color: var(--color-text);
+  font-weight: 600;
 }
 
 
