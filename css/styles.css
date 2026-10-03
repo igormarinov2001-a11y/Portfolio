@@ -242,6 +242,47 @@ img {
 }
 
 
+/* Меню: прокатывание букв при наведении.
+   Каждая буква — колонка из двух копий; при наведении колонка уезжает вверх
+   на одну строку (1.2em), а задержка растёт с номером буквы (--i), поэтому буквы идут по очереди. */
+.roll {
+  display: inline-flex;
+  height: 1.2em;
+  overflow: hidden;
+  line-height: 1.2;
+  vertical-align: top;
+}
+
+.roll__char {
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.4s cubic-bezier(0.76, 0, 0.24, 1);
+  transition-delay: calc(var(--i) * 15ms);
+}
+
+.roll__char > span {
+  display: block;
+  height: 1.2em;
+}
+
+@media (hover: hover) {
+  .nav__list a:hover .roll__char {
+    transform: translateY(-1.2em);
+  }
+}
+
+.nav__list a:focus-visible .roll__char {
+  transform: translateY(-1.2em);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roll__char {
+    transition: none;
+    transform: none !important;
+  }
+}
+
+
 /* ==========================================================================
    7. Первый экран (hero)
    ========================================================================== */
