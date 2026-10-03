@@ -438,24 +438,34 @@ img {
 
 
 /* ==========================================================================
-   8. Кусочек следующего блока под первым экраном (градиент)
-   Выглядывает снизу на ~10% высоты экрана.
-   ВРЕМЕННО нарисован градиентом; заменить на картинку, когда пришлёте файл.
+   8. Градиентный блок, раскрывающийся при скролле
+   В начале выглядывает снизу первого экрана узкой полоской (32% ширины, пропорции 16:9),
+   при прокрутке поднимается и растёт до полного экрана. Прогресс --p (от 0 до 1)
+   считает js/main.js по положению блока на экране.
    ========================================================================== */
 
-.hero-peek {
+.reveal {
+  --p: 0;
+  --w0: 32vw;  /* ширина в начале */
+  --h0: 18vw;  /* высота в начале (16:9 от ширины) */
   position: relative;
   z-index: 1;
-  width: 32vw;
-  height: 20vw;
-  margin: calc(-10.3svh) auto 0;
-  background:
-    radial-gradient(55% 90% at 0% 45%, #6278ff 0%, transparent 70%),
-    radial-gradient(40% 80% at 22% 10%, #6a0ee8 0%, transparent 75%),
-    radial-gradient(28% 100% at 52% 75%, #140e5c 0%, transparent 80%),
-    radial-gradient(40% 90% at 85% 25%, #8088fa 0%, transparent 75%),
-    radial-gradient(35% 80% at 100% 85%, #9040fc 0%, transparent 75%),
-    #3b2fb8;
+  height: 100svh;
+  margin-top: -10.3svh; /* на столько блок выглядывает снизу первого экрана */
+}
+
+.reveal__media {
+  width: calc(var(--w0) + (100% - var(--w0)) * var(--p));
+  height: calc(var(--h0) + (100svh - var(--h0)) * var(--p));
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.reveal__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 
@@ -516,9 +526,9 @@ img {
     white-space: normal;
   }
 
-  .hero-peek {
-    width: 70vw;
-    height: 40vw;
+  .reveal {
+    --w0: 70vw;
+    --h0: 39.4vw;
     margin-top: 0;
   }
 }

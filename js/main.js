@@ -67,3 +67,42 @@ document.querySelectorAll('[data-slideshow]').forEach((box) => {
   document.addEventListener('visibilitychange', () => (document.hidden ? stop() : start()));
   start();
 });
+
+
+// Градиентный блок под hero: при скролле растёт от узкой полоски до полного экрана.
+// Прогресс --p (0…1) зависит от того, как высоко блок поднялся над нижним краем экрана.
+// Движение слегка сглаживается (догоняет скролл), чтобы не дёргалось.
+document.querySelectorAll('[data-reveal]').forEach((reveal) => {
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const SMOOTHING = reduceMotion ? 1 : 0.15; // 1 = без сглаживания, меньше = плавнее
+  const PEEK = 0.103; // доля высоты экрана, на которую блок выглядывает в начале (как в CSS)
+
+  let current = 0;
+  let target = 0;
+  let frame = null;
+
+  const measure = () => {
+    const start = window.innerHeight * (1 - PEEK); // положение верха блока при scroll = 0
+    const progress = 1 - reveal.getBoundingClientRect().top / start;
+    target = Math.min(1, Math.max(0, progress));
+  };
+
+  const tick = () => {
+    current += (target - current) * SMOOTHING;
+    if (Math.abs(target - current) < 0.0005) current = target;
+    reveal.style.setProperty('--p', current.toFixed(4));
+    frame = current === target ? null : requestAnimationFrame(tick);
+  };
+
+  const update = () => {
+    measure();
+    if (!frame) frame = requestAnimationFrame(tick);
+  };
+
+  measure();
+  current = target; // при перезагрузке страницы посреди скролла сразу ставим нужный размер
+  reveal.style.setProperty('--p', current.toFixed(4));
+
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+});
