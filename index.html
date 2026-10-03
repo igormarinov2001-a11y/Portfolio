@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Northlane — Agency</title>
+  <meta name="description" content="Senior designers. Fixed process. Pixel-perfect handoff. Brand, product, and web for teams that can't afford average.">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <!-- Три вертикальные линии сетки на всю высоту страницы -->
+  <div class="grid-lines" aria-hidden="true">
+    <span></span><span></span><span></span>
+  </div>
+
+  <header class="header">
+    <a class="logo" href="#top" aria-label="The Northlane — home">
+      <span class="serif">The</span> Northlane
+    </a>
+
+    <nav class="nav" aria-label="Main">
+      <ul class="nav__list">
+        <li><a href="#works">Works <span class="serif">(32)</span></a></li>
+        <li><a href="#services">Services</a></li>
+        <li><a href="#process">Process</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#contact">Contact us</a></li>
+      </ul>
+    </nav>
+
+    <a class="btn btn--light header__cta" href="#contact">
+      Book a call
+      <svg class="btn__arrow" width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+        <path d="M2 12 12 2M4 2h8v8" stroke="currentColor" stroke-width="1.2"/>
+      </svg>
+    </a>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+
+      <div class="hero__main">
+        <h1 class="hero__title">
+          <span class="hero__the serif">The</span>
+          <span class="hero__word">Northlane</span>
+          <img class="hero__mockup" src="images/hero-mockup.png" width="396" height="232" alt="">
+          <span class="hero__word">Agency</span>
+        </h1>
+
+        <div class="hero__actions">
+          <a class="btn btn--light" href="#contact">
+            Book a call
+            <svg class="btn__arrow" width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M2 12 12 2M4 2h8v8" stroke="currentColor" stroke-width="1.2"/>
+            </svg>
+          </a>
+          <a class="btn btn--outline" href="#works">View work</a>
+        </div>
+      </div>
+
+      <ol class="hero__services" id="services">
+        <li><span class="num" aria-hidden="true">01</span><span class="dash" aria-hidden="true">-</span>Web Design</li>
+        <li><span class="num" aria-hidden="true">02</span><span class="dash" aria-hidden="true">-</span>Brand Identity</li>
+        <li><span class="num" aria-hidden="true">03</span><span class="dash" aria-hidden="true">-</span>Mobile App</li>
+        <li><span class="num" aria-hidden="true">04</span><span class="dash" aria-hidden="true">-</span>AI Content</li>
+        <li><span class="num" aria-hidden="true">05</span><span class="dash" aria-hidden="true">-</span>Product Redesign</li>
+      </ol>
+
+      <p class="hero__tagline">
+        <span class="line"><strong>Senior designers. Fixed process.</strong></span>
+        <span class="line"><strong>Pixel-perfect handoff.</strong> Brand, product,</span>
+        <span class="line">and web for teams that can't afford average.</span>
+      </p>
+
+    </section>
+
+    <!-- Кусочек следующего блока, выглядывающий снизу первого экрана -->
+    <div class="hero-peek" aria-hidden="true"></div>
+  </main>
+
+</body>
+</html>
