@@ -470,6 +470,48 @@ img {
 
 
 /* ==========================================================================
+   8.1 Блок «About Us» (идёт сразу после градиента)
+   Отступы сверху и снизу по 180px, левый край текста на 339px (размеры макета на 1920).
+   ========================================================================== */
+
+.about {
+  position: relative;
+  z-index: 1;
+  padding: calc(180 * var(--u)) var(--gutter) calc(180 * var(--u)) calc(339 * var(--u));
+}
+
+.about__label {
+  margin-bottom: calc(43 * var(--u));
+  font-size: calc(24 * var(--u));
+  line-height: 1;
+}
+
+/* Большой текст: 72px, строка 80px. Каждая строка — отдельный блок, чтобы переносы
+   были ровно как в макете. */
+.about__lead {
+  margin: 0;
+  font-size: calc(72 * var(--u));
+  font-weight: 500;
+  line-height: calc(80 * var(--u));
+  letter-spacing: -0.02em;
+}
+
+.about .line {
+  display: block;
+  white-space: nowrap;
+}
+
+/* Маленький абзац справа внизу: сдвинут от левого края текста на 629px */
+.about__note {
+  margin-top: calc(232 * var(--u));
+  margin-left: calc(629 * var(--u));
+  font-size: max(14px, calc(24 * var(--u)));
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+
+/* ==========================================================================
    9. Телефон и планшет
    Мобильного макета пока нет — это аккуратная заглушка, чтобы страница
    не ломалась. Переделаем, когда будет дизайн.
@@ -530,5 +572,30 @@ img {
     --w0: 70vw;
     --h0: 39.4vw;
     margin-top: 0;
+  }
+
+  .about {
+    padding: 80px var(--gutter);
+  }
+
+  .about__label {
+    margin-bottom: 24px;
+    font-size: 20px;
+  }
+
+  .about__lead {
+    font-size: 9vw;
+    line-height: 1.12;
+  }
+
+  .about .line {
+    display: inline;
+    white-space: normal;
+  }
+
+  .about__note {
+    margin: 48px 0 0;
+    max-width: 420px;
+    font-size: 16px;
   }
 }

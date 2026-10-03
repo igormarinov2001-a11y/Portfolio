@@ -76,6 +76,7 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const SMOOTHING = reduceMotion ? 1 : 0.15; // 1 = без сглаживания, меньше = плавнее
   const PEEK = 0.103; // доля высоты экрана, на которую блок выглядывает в начале (как в CSS)
+  const SPEED = 1.8; // во сколько раз быстрее, чем «1 к 1», раскрывается блок (больше = быстрее)
 
   let current = 0;
   let target = 0;
@@ -83,7 +84,7 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
 
   const measure = () => {
     const start = window.innerHeight * (1 - PEEK); // положение верха блока при scroll = 0
-    const progress = 1 - reveal.getBoundingClientRect().top / start;
+    const progress = (1 - reveal.getBoundingClientRect().top / start) * SPEED;
     target = Math.min(1, Math.max(0, progress));
   };
 
