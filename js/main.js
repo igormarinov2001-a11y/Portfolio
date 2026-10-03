@@ -125,15 +125,13 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
 });
 
 
-// Текст в About: буквы серые (белый 40%) и по мере скролла по очереди, по одной,
-// заливаются белым. Фронт заливки узкий: одновременно «горят» всего несколько букв.
+// Текст в About: буквы серые (белый 40%) и по мере скролла по очереди, строго по одной,
+// становятся белыми. Чёткая смена «серая → белая», без промежуточных тонов.
 document.querySelectorAll('[data-scrub]').forEach((block) => {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // остаётся белым
 
   const START_AT = 0.85; // начинаем, когда верх текста поднялся до 85% высоты экрана
   const END_AT = 0.6; // заканчиваем, когда низ текста поднялся до 60% высоты экрана
-  const BASE = 0.4; // прозрачность незаполненной буквы
-  const OVERLAP = 1; // сколько букв «горят» одновременно: 1 = строго по одной
 
   // Читалкам с экрана отдаём весь текст целиком, а не по буквам
   block.setAttribute('aria-label', block.textContent.replace(/\s+/g, ' ').trim());
@@ -150,7 +148,6 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
         const char = document.createElement('span');
         char.className = 'char';
         char.textContent = ch;
-        char.style.setProperty('--a', BASE);
         word.append(char);
         chars.push(char);
       }
@@ -159,7 +156,7 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
     });
   });
 
-  const alpha = new Array(chars.length).fill(BASE);
+  let lit = 0; // сколько букв сейчас белые
   let startScroll = 0;
   let endScroll = 1;
   let frame = null;
@@ -175,14 +172,10 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
   const render = () => {
     frame = null;
     const q = Math.min(1, Math.max(0, (window.scrollY - startScroll) / (endScroll - startScroll)));
-    chars.forEach((char, i) => {
-      const local = Math.min(1, Math.max(0, (q * (chars.length - 1 + OVERLAP) - i) / OVERLAP));
-      const value = +(BASE + (1 - BASE) * local).toFixed(3);
-      if (value !== alpha[i]) {
-        alpha[i] = value;
-        char.style.setProperty('--a', value);
-      }
-    });
+    const next = Math.ceil(q * chars.length); // сколько букв должно быть белыми
+    for (let i = lit; i < next; i++) chars[i].classList.add('is-on');
+    for (let i = lit - 1; i >= next; i--) chars[i].classList.remove('is-on');
+    lit = next;
   };
 
   const update = () => {
