@@ -50,6 +50,7 @@
   --color-muted: #858585;      /* серый текст: номера услуг, второй абзац */
   --color-muted-dash: #676767; /* серый тире между номером и названием */
   --color-line: #1a1a1a;       /* вертикальные линии сетки */
+  --color-accent: #2b3bff;     /* заливка главной кнопки при наведении */
 
   /* Шрифты */
   --font-sans: "Uncut Sans", system-ui, sans-serif;
@@ -155,6 +156,9 @@ img {
    ========================================================================== */
 
 .btn {
+  position: relative;
+  isolation: isolate; /* заливка ниже лежит под текстом кнопки, но над её фоном */
+  overflow: hidden;
   display: inline-flex;
   align-items: center;
   gap: calc(10 * var(--u));
@@ -167,9 +171,23 @@ img {
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 
+/* Главная кнопка (белая). При наведении синяя заливка поднимается снизу вверх,
+   текст и стрелка становятся белыми. */
 .btn--light {
   background: var(--color-text);
   color: var(--color-bg);
+  /* Цвет текста переключается быстро и ровно тогда, когда заливка доходит до середины кнопки (0.2s из 0.4s) */
+  transition: color 0.1s linear 0.15s, border-color 0.4s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.btn--light::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--color-accent);
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 .btn--outline {
@@ -183,10 +201,24 @@ img {
   height: calc(12 * var(--u));
 }
 
+/* То же при переходе с клавиатуры (Tab) */
+.btn--light:focus-visible {
+  border-color: var(--color-accent);
+  color: var(--color-text);
+}
+
+.btn--light:focus-visible::before {
+  transform: translateY(0);
+}
+
 @media (hover: hover) {
   .btn--light:hover {
-    background: transparent;
+    border-color: var(--color-accent);
     color: var(--color-text);
+  }
+
+  .btn--light:hover::before {
+    transform: translateY(0);
   }
 
   .btn--outline:hover {
@@ -276,6 +308,11 @@ img {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .btn--light,
+  .btn--light::before {
+    transition: none;
+  }
+
   .roll__char {
     transition: none;
     transform: none !important;
