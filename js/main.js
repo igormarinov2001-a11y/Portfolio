@@ -125,30 +125,41 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
 });
 
 
-// Текст в About: слова серые (белый 50%) и по мере скролла по очереди заполняются белым,
-// как субтитры. Каждое слово загорается плавно, соседние немного перекрываются.
+// Текст в About: буквы серые (белый 40%) и по мере скролла по очереди, по одной,
+// заливаются белым. Фронт заливки узкий: одновременно «горят» всего несколько букв.
 document.querySelectorAll('[data-scrub]').forEach((block) => {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // остаётся белым
 
   const START_AT = 0.85; // начинаем, когда верх текста поднялся до 85% высоты экрана
   const END_AT = 0.6; // заканчиваем, когда низ текста поднялся до 60% высоты экрана
-  const OVERLAP = 2; // сколько слов «горят» одновременно (больше = плавнее волна)
+  const BASE = 0.4; // прозрачность незаполненной буквы
+  const OVERLAP = 3; // сколько букв «горят» одновременно (меньше = резче фронт заливки)
 
-  const words = [];
+  // Читалкам с экрана отдаём весь текст целиком, а не по буквам
+  block.setAttribute('aria-label', block.textContent.replace(/\s+/g, ' ').trim());
+
+  const chars = [];
   block.querySelectorAll('.line').forEach((line) => {
+    line.setAttribute('aria-hidden', 'true');
     const parts = line.textContent.trim().split(/\s+/);
     line.textContent = '';
     parts.forEach((text, i) => {
-      const word = document.createElement('span');
+      const word = document.createElement('span'); // слово не даёт разорвать себя между строками
       word.className = 'word';
-      word.textContent = text;
-      word.style.setProperty('--a', '0.5');
+      for (const ch of text) {
+        const char = document.createElement('span');
+        char.className = 'char';
+        char.textContent = ch;
+        char.style.setProperty('--a', BASE);
+        word.append(char);
+        chars.push(char);
+      }
       line.append(word);
       if (i < parts.length - 1) line.append(' ');
-      words.push(word);
     });
   });
 
+  const alpha = new Array(chars.length).fill(BASE);
   let startScroll = 0;
   let endScroll = 1;
   let frame = null;
@@ -164,9 +175,13 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
   const render = () => {
     frame = null;
     const q = Math.min(1, Math.max(0, (window.scrollY - startScroll) / (endScroll - startScroll)));
-    words.forEach((word, i) => {
-      const local = Math.min(1, Math.max(0, (q * (words.length - 1 + OVERLAP) - i) / OVERLAP));
-      word.style.setProperty('--a', (0.5 + 0.5 * local).toFixed(3));
+    chars.forEach((char, i) => {
+      const local = Math.min(1, Math.max(0, (q * (chars.length - 1 + OVERLAP) - i) / OVERLAP));
+      const value = +(BASE + (1 - BASE) * local).toFixed(3);
+      if (value !== alpha[i]) {
+        alpha[i] = value;
+        char.style.setProperty('--a', value);
+      }
     });
   };
 
