@@ -97,9 +97,10 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
     const y = (1 - current) * start + Math.max(0, -sigma) - Math.max(0, sigma - distance);
     reveal.style.setProperty('--p', current.toFixed(4));
     reveal.style.setProperty('--y', `${y.toFixed(1)}px`);
-    // Дрейф градиента идёт, только когда он раскрыт на весь экран и виден
-    reveal.classList.toggle('is-armed', current > 0.02);
-    reveal.classList.toggle('is-live', current > 0.995 && y > -window.innerHeight);
+    // Дрейф градиента запускается, когда он впервые раскрылся на весь экран, и дальше идёт
+    // всё время, пока блок виден (при скролле не прерывается и не сбрасывается)
+    if (current > 0.995) reveal.classList.add('is-armed');
+    reveal.classList.toggle('is-live', y > -window.innerHeight);
   };
 
   const tick = () => {
