@@ -310,6 +310,10 @@ img {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .reveal .reveal__media img {
+    animation: none !important;
+  }
+
   .btn,
   .btn::before {
     transition: none;
@@ -477,6 +481,29 @@ img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Лёгкий дрейф картинки. Классы ставит js/main.js:
+   is-armed — блок начал раскрываться (анимация готова, но на паузе),
+   is-live — раскрыт на весь экран и виден (анимация идёт).
+   В самом начале (узкая полоска) анимации нет, картинка стоит ровно как в макете. */
+.reveal.is-armed .reveal__media img {
+  animation: gradient-drift 14s ease-in-out infinite alternate;
+  animation-play-state: paused;
+}
+
+.reveal.is-live .reveal__media img {
+  animation-play-state: running;
+}
+
+/* Увеличение с запасом (до 1.12), чтобы при смещении по краям не показывался фон */
+@keyframes gradient-drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  }
+  to {
+    transform: translate3d(-2.5%, 1.8%, 0) scale(1.12) rotate(1.2deg);
+  }
 }
 
 
