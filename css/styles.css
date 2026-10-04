@@ -577,6 +577,45 @@ img {
 
 
 /* ==========================================================================
+   8.2 Блок «Selected Works»: сетка проектов 2×2 и кнопка
+   Отступы по краям 25px, зазоры между картинками 16px, сверху и снизу по 180px.
+   ========================================================================== */
+
+.works {
+  position: relative;
+  z-index: 1;
+  padding: calc(180 * var(--u)) var(--gutter);
+}
+
+.works__label {
+  margin-bottom: calc(23 * var(--u));
+  font-size: calc(24 * var(--u));
+  line-height: 1;
+}
+
+.works__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: calc(16 * var(--u));
+}
+
+.work img {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 927 / 644;
+  object-fit: cover;
+}
+
+/* Кнопка «View all works» по центру под сеткой (та же белая кнопка, что и в hero) */
+.works__more {
+  display: flex;
+  width: fit-content;
+  margin: calc(44 * var(--u)) auto 0;
+}
+
+
+/* ==========================================================================
    9. Телефон и планшет
    Мобильного макета пока нет — это аккуратная заглушка, чтобы страница
    не ломалась. Переделаем, когда будет дизайн.
@@ -661,5 +700,23 @@ img {
     margin: 48px 0 0;
     max-width: 420px;
     font-size: 16px;
+  }
+
+  .works {
+    padding: 80px var(--gutter);
+  }
+
+  .works__label {
+    margin-bottom: 24px;
+    font-size: 20px;
+  }
+
+  .works__grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .works__more {
+    margin-top: 32px;
   }
 }
