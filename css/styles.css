@@ -311,7 +311,8 @@ img {
 
 @media (prefers-reduced-motion: reduce) {
   .work img,
-  .work__strip {
+  .work__strip,
+  .work::after {
     transition: none;
   }
 
@@ -613,6 +614,17 @@ img {
   overflow: hidden;
 }
 
+/* Тёмный оверлей: при наведении на одну карточку остальные затемняются */
+.work::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgb(11 11 11 / 0.65);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
 .work img {
   display: block;
   width: 100%;
@@ -624,7 +636,8 @@ img {
 
 /* Полоска по центру карточки с бегущей строкой. В обычном состоянии «схлопнута» в линию
    по центру и не видна; при наведении раскрывается (clip-path) и строка начинает двигаться.
-   Содержимое (повторяющийся текст) строит js/main.js из data-marquee. */
+   Содержимое строит js/main.js из data-marquee: части через «|» чередуются по кругу,
+   каждая — отдельный элемент с одинаковым промежутком (текст, дата, текст, дата…). */
 .work__strip {
   position: absolute;
   top: 50%;
@@ -632,7 +645,7 @@ img {
   right: 0;
   display: flex;
   align-items: center;
-  height: calc(39 * var(--u));
+  height: calc(32 * var(--u));
   overflow: hidden;
   background: var(--color-text);
   color: var(--color-bg);
@@ -661,7 +674,7 @@ img {
 }
 
 .marquee__item {
-  padding-right: calc(48 * var(--u));
+  padding-right: calc(40 * var(--u)); /* промежуток между элементами ленты */
 }
 
 @keyframes marquee {
@@ -671,6 +684,10 @@ img {
 }
 
 @media (hover: hover) {
+  .works__grid:has(.work:hover) .work:not(:hover)::after {
+    opacity: 1;
+  }
+
   .work:hover img {
     transform: scale(1.05);
   }

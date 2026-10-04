@@ -196,20 +196,23 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
 });
 
 
-// Бегущая строка в карточках проектов: строит повторяющийся текст из data-marquee.
+// Бегущая строка в карточках проектов. Строит ленту из data-marquee: части через «|»
+// (например, «View case study|2026») чередуются по кругу, каждая — отдельный элемент.
 // Две одинаковые группы подряд дают бесшовную петлю (анимация в CSS, .marquee__track).
 document.querySelectorAll('[data-marquee]').forEach((el) => {
-  const text = el.dataset.marquee;
-  const REPEAT = 6; // сколько раз повторяем фразу в группе (должно перекрывать ширину карточки)
+  const parts = el.dataset.marquee.split('|');
+  const REPEAT = 6; // сколько раз повторяем набор частей в группе (должно перекрывать ширину карточки)
 
   const makeGroup = () => {
     const group = document.createElement('div');
     group.className = 'marquee__group';
     for (let i = 0; i < REPEAT; i++) {
-      const item = document.createElement('span');
-      item.className = 'marquee__item';
-      item.textContent = text;
-      group.append(item);
+      parts.forEach((text) => {
+        const item = document.createElement('span');
+        item.className = 'marquee__item';
+        item.textContent = text;
+        group.append(item);
+      });
     }
     return group;
   };
