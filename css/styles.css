@@ -235,7 +235,7 @@ img {
    ========================================================================== */
 
 .header {
-  position: absolute;
+  position: fixed; /* шапка остаётся на месте при скролле */
   top: 0;
   left: 0;
   right: 0;
@@ -311,8 +311,7 @@ img {
 
 @media (prefers-reduced-motion: reduce) {
   .work img,
-  .work__strip,
-  .work::after {
+  .work__strip {
     transition: none;
   }
 
@@ -466,7 +465,7 @@ img {
   --y: 89.7svh;           /* запасное значение, если скрипт не загрузился: блок выглядывает снизу */
   --w0: 32vw;             /* ширина в начале */
   --h0: 18vw;             /* высота в начале (16:9 от ширины) */
-  --reveal-distance: 32svh; /* сколько нужно проскроллить, чтобы градиент закрыл экран */
+  --reveal-distance: 20svh; /* сколько нужно проскроллить, чтобы градиент закрыл экран */
   position: relative;
   height: var(--reveal-distance);
 }
@@ -558,11 +557,9 @@ img {
 }
 
 /* Буквы большого текста: серые (белый 40%), по мере скролла по очереди, строго по одной,
-   становятся белыми. Класс is-on ставит js/main.js; переход очень короткий, чтобы смена
-   выглядела чёткой, но без мигания. */
+   становятся белыми. Класс is-on ставит js/main.js; смена мгновенная, без плавного перехода. */
 .about .char {
   color: var(--color-text-dim);
-  transition: color 0.1s linear;
 }
 
 .about .char.is-on {
@@ -614,17 +611,6 @@ img {
   overflow: hidden;
 }
 
-/* Тёмный оверлей: при наведении на одну карточку остальные затемняются */
-.work::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgb(11 11 11 / 0.65);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.4s ease;
-}
-
 .work img {
   display: block;
   width: 100%;
@@ -647,9 +633,10 @@ img {
   align-items: center;
   height: calc(32 * var(--u));
   overflow: hidden;
-  background: var(--color-text);
-  color: var(--color-bg);
+  background: var(--color-accent); /* синяя заливка, как у ховера главной кнопки */
+  color: var(--color-text);
   font-size: max(12px, calc(15 * var(--u)));
+  font-weight: 600;
   line-height: 1;
   white-space: nowrap;
   pointer-events: none;
@@ -684,10 +671,6 @@ img {
 }
 
 @media (hover: hover) {
-  .works__grid:has(.work:hover) .work:not(:hover)::after {
-    opacity: 1;
-  }
-
   .work:hover img {
     transform: scale(1.05);
   }

@@ -76,7 +76,7 @@ document.querySelectorAll('[data-slideshow]').forEach((box) => {
 document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   const hero = document.querySelector('.hero');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const SMOOTHING = reduceMotion ? 1 : 0.22; // 1 = без сглаживания, меньше = плавнее (но и мягче)
+  const SMOOTHING = reduceMotion ? 1 : 0.4; // 1 = без сглаживания, меньше = плавнее (но и мягче)
   const PEEK = 0.103; // доля высоты экрана, на которую блок выглядывает в начале (как в CSS)
 
   let current = 0; // сглаженный прогресс раскрытия
@@ -129,13 +129,16 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
 });
 
 
-// Текст в About: буквы серые (белый 40%) и по мере скролла по очереди, строго по одной,
-// становятся белыми. Чёткая смена «серая → белая», без промежуточных тонов.
+// Текст в About: буквы серые (белый 40%) и по мере скролла по очереди, СТРОГО ПО ОДНОЙ,
+// становятся белыми. Скролл определяет, сколько букв должно быть белыми, а сами буквы
+// включаются друг за другом с фиксированным темпом (STEP_MS на букву), поэтому даже при
+// быстрой прокрутке заливка идёт по буквам, а не сразу пачкой. Смена мгновенная.
 document.querySelectorAll('[data-scrub]').forEach((block) => {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // остаётся белым
 
   const START_AT = 0.85; // начинаем, когда верх текста поднялся до 85% высоты экрана
   const END_AT = 0.6; // заканчиваем, когда низ текста поднялся до 60% высоты экрана
+  const STEP_MS = 12; // сколько миллисекунд на одну букву (меньше = быстрее бежит заливка)
 
   // Читалкам с экрана отдаём весь текст целиком, а не по буквам
   block.setAttribute('aria-label', block.textContent.replace(/\s+/g, ' ').trim());
@@ -160,10 +163,13 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
     });
   });
 
-  let lit = 0; // сколько букв сейчас белые
+  let shown = 0; // сколько букв белые прямо сейчас
+  let target = 0; // сколько должно быть белыми по положению скролла
   let startScroll = 0;
   let endScroll = 1;
   let frame = null;
+  let last = 0;
+  let acc = 0;
 
   const measure = () => {
     const top = block.getBoundingClientRect().top + window.scrollY;
@@ -173,21 +179,42 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
     if (endScroll <= startScroll + 1) endScroll = startScroll + 1;
   };
 
-  const render = () => {
-    frame = null;
+  const readTarget = () => {
     const q = Math.min(1, Math.max(0, (window.scrollY - startScroll) / (endScroll - startScroll)));
-    const next = Math.ceil(q * chars.length); // сколько букв должно быть белыми
-    for (let i = lit; i < next; i++) chars[i].classList.add('is-on');
-    for (let i = lit - 1; i >= next; i--) chars[i].classList.remove('is-on');
-    lit = next;
+    target = Math.ceil(q * chars.length);
+  };
+
+  // Двигаем заливку к цели по одной букве за STEP_MS (вперёд или назад)
+  const step = (now) => {
+    frame = null;
+    if (last) acc += now - last;
+    last = now;
+    while (acc >= STEP_MS && shown !== target) {
+      if (shown < target) chars[shown++].classList.add('is-on');
+      else chars[--shown].classList.remove('is-on');
+      acc -= STEP_MS;
+    }
+    if (shown === target) {
+      acc = 0;
+      last = 0;
+    } else {
+      frame = requestAnimationFrame(step);
+    }
   };
 
   const update = () => {
-    if (!frame) frame = requestAnimationFrame(render);
+    readTarget();
+    if (!frame && shown !== target) {
+      acc = STEP_MS; // первая буква включается сразу, без задержки
+      frame = requestAnimationFrame(step);
+    }
   };
 
+  // При загрузке (например, перезагрузка страницы посреди скролла) сразу ставим нужное состояние
   measure();
-  render();
+  readTarget();
+  for (; shown < target; shown++) chars[shown].classList.add('is-on');
+
   window.addEventListener('scroll', update, { passive: true });
   window.addEventListener('resize', () => {
     measure();
