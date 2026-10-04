@@ -194,3 +194,28 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
     update();
   });
 });
+
+
+// Бегущая строка в карточках проектов: строит повторяющийся текст из data-marquee.
+// Две одинаковые группы подряд дают бесшовную петлю (анимация в CSS, .marquee__track).
+document.querySelectorAll('[data-marquee]').forEach((el) => {
+  const text = el.dataset.marquee;
+  const REPEAT = 6; // сколько раз повторяем фразу в группе (должно перекрывать ширину карточки)
+
+  const makeGroup = () => {
+    const group = document.createElement('div');
+    group.className = 'marquee__group';
+    for (let i = 0; i < REPEAT; i++) {
+      const item = document.createElement('span');
+      item.className = 'marquee__item';
+      item.textContent = text;
+      group.append(item);
+    }
+    return group;
+  };
+
+  const track = document.createElement('div');
+  track.className = 'marquee__track';
+  track.append(makeGroup(), makeGroup());
+  el.append(track);
+});

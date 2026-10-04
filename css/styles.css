@@ -310,6 +310,15 @@ img {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .work img,
+  .work__strip {
+    transition: none;
+  }
+
+  .marquee__track {
+    animation: none;
+  }
+
   .reveal .reveal__media img {
     animation: none !important;
   }
@@ -599,12 +608,80 @@ img {
   gap: calc(16 * var(--u));
 }
 
+.work {
+  position: relative;
+  overflow: hidden;
+}
+
 .work img {
   display: block;
   width: 100%;
   height: auto;
   aspect-ratio: 927 / 644;
   object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* Полоска по центру карточки с бегущей строкой. В обычном состоянии «схлопнута» в линию
+   по центру и не видна; при наведении раскрывается (clip-path) и строка начинает двигаться.
+   Содержимое (повторяющийся текст) строит js/main.js из data-marquee. */
+.work__strip {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  height: calc(39 * var(--u));
+  overflow: hidden;
+  background: var(--color-text);
+  color: var(--color-bg);
+  font-size: max(12px, calc(15 * var(--u)));
+  line-height: 1;
+  white-space: nowrap;
+  pointer-events: none;
+  transform: translateY(-50%);
+  clip-path: inset(50% 0);
+  transition: clip-path 0.35s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* Лента: две одинаковые группы подряд, сдвиг на -50% = ровно на одну группу, поэтому
+   цикл бесшовный. Скорость — 24s на группу (больше = медленнее). */
+.marquee__track {
+  display: flex;
+  flex: none;
+  width: max-content;
+  animation: marquee 24s linear infinite;
+  animation-play-state: paused;
+}
+
+.marquee__group {
+  display: flex;
+  flex: none;
+}
+
+.marquee__item {
+  padding-right: calc(48 * var(--u));
+}
+
+@keyframes marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (hover: hover) {
+  .work:hover img {
+    transform: scale(1.05);
+  }
+
+  .work:hover .work__strip {
+    clip-path: inset(0);
+  }
+
+  .work:hover .marquee__track {
+    animation-play-state: running;
+  }
 }
 
 /* Кнопка «View all works» по центру под сеткой (та же белая кнопка, что и в hero) */
