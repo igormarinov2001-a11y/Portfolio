@@ -102,7 +102,8 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
     // Пока градиент под шапкой, инверсию текста шапки выключаем (на градиенте она даёт грязные цвета)
     if (header) {
       const box = media.getBoundingClientRect();
-      header.classList.toggle('is-on-media', box.top < header.offsetHeight && box.bottom > 0);
+      const layer = document.querySelector('.header--mirror') || header; // слой с инверсией
+      layer.classList.toggle('is-on-media', box.top < header.offsetHeight && box.bottom > 0);
     }
     // Дрейф градиента запускается, когда он впервые раскрылся на весь экран, и дальше идёт
     // всё время, пока блок виден (при скролле не прерывается и не сбрасывается)
@@ -304,3 +305,32 @@ document.querySelectorAll('[data-works]').forEach((section) => {
   window.addEventListener('scroll', update, { passive: true });
   window.addEventListener('resize', update);
 });
+
+
+// Шапка из двух слоёв (подробности в CSS, «Шапка из двух слоёв»): создаём копию шапки для слоя с
+// инверсией. Копия — только картинка (aria-hidden, без кликов), а ховер пунктов меню в оригинале
+// повторяется на ней классом is-hover, чтобы буквы «прокатывались» одинаково в обоих слоях.
+(() => {
+  const header = document.querySelector('.header');
+  if (!header) return;
+
+  const mirror = header.cloneNode(true);
+  mirror.classList.add('header--mirror');
+  mirror.setAttribute('aria-hidden', 'true');
+  mirror.setAttribute('inert', '');
+  mirror.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
+  mirror.querySelectorAll('a').forEach((a) => a.setAttribute('tabindex', '-1'));
+  header.before(mirror);
+  document.documentElement.classList.add('js-mirror');
+
+  const links = header.querySelectorAll('.nav__list a');
+  const copies = mirror.querySelectorAll('.nav__list a');
+  links.forEach((link, i) => {
+    const on = () => copies[i].classList.add('is-hover');
+    const off = () => copies[i].classList.remove('is-hover');
+    link.addEventListener('mouseenter', on);
+    link.addEventListener('mouseleave', off);
+    link.addEventListener('focus', on);
+    link.addEventListener('blur', off);
+  });
+})();
