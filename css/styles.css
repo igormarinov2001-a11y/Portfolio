@@ -661,7 +661,7 @@ img {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 25%;
+  width: calc(25% + 1px); /* +1px: колонки слегка перекрываются, шва между ними не будет */
   background: var(--color-text);
   transform: scaleX(var(--f, 0));
   transform-origin: left center;
@@ -673,8 +673,8 @@ img {
 .works__fill span:nth-child(3) { left: 50%; }
 .works__fill span:nth-child(4) { left: 75%; }
 
-/* Линии сетки поверх заливки: тёмные с прозрачностью 10%, поэтому на тёмном фоне не видны,
-   а на белом проступают тонкими серыми линиями */
+/* Линии сетки поверх заливки: тонкие (1px), тёмные с прозрачностью 12%, поэтому на тёмном
+   фоне не видны, а на белом проступают лёгкими серыми линиями */
 .works__lines {
   z-index: 1;
 }
@@ -683,8 +683,8 @@ img {
   position: absolute;
   top: 0;
   bottom: 0;
-  width: 2px;
-  background: rgb(11 11 11 / 0.1);
+  width: 1px;
+  background: rgb(11 11 11 / 0.12);
 }
 
 .works__lines span:nth-child(1) { left: calc(25% - 1px); }

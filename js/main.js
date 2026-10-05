@@ -255,7 +255,7 @@ document.querySelectorAll('[data-marquee]').forEach((el) => {
 // скролите, четыре колонки (между линиями сетки) заливаются белым слева направо одновременно,
 // потом появляются подпись, работы и кнопка.
 // --f (0…1) — прогресс заливки; is-in — заливка закончилась, показываем контент.
-// Когда белого уже больше половины, шапка становится тёмной (is-on-light), чтобы не пропасть
+// Когда заливка стала полностью белой, шапка становится тёмной (is-on-light), чтобы не пропасть
 // на белом.
 document.querySelectorAll('[data-works]').forEach((section) => {
   const header = document.querySelector('.header');
@@ -283,7 +283,8 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 
     if (header) {
       const mid = header.offsetHeight / 2;
-      header.classList.toggle('is-on-light', eased >= 0.55 && section.getBoundingClientRect().bottom > mid);
+      // Шапка меняет цвет только когда заливка полностью белая (то же условие, что и is-in)
+      header.classList.toggle('is-on-light', section.classList.contains('is-in') && section.getBoundingClientRect().bottom > mid);
     }
   };
 
