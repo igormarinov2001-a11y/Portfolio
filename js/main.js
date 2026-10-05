@@ -251,15 +251,17 @@ document.querySelectorAll('[data-marquee]').forEach((el) => {
 });
 
 
-// Секция работ: при скролле фон становится белым. Четыре колонки (между линиями сетки)
-// заливаются слева направо одновременно, потом появляются работы и кнопка.
+// Секция работ. Сначала секция занимает весь экран (тёмная), потом закрепляется и, пока вы
+// скролите, четыре колонки (между линиями сетки) заливаются белым слева направо одновременно,
+// потом появляются подпись, работы и кнопка.
 // --f (0…1) — прогресс заливки; is-in — заливка закончилась, показываем контент.
-// Пока секция под шапкой, шапка становится тёмной (is-on-light), чтобы не пропасть на белом.
+// Когда белого уже больше половины, шапка становится тёмной (is-on-light), чтобы не пропасть
+// на белом.
 document.querySelectorAll('[data-works]').forEach((section) => {
   const header = document.querySelector('.header');
+  const pin = section.querySelector('.works__pin');
+  const stage = section.querySelector('.works__stage');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const START_AT = 0.85; // заливка начинается, когда верх секции поднялся до 85% высоты экрана
-  const END_AT = 0.25; // и заканчивается, когда он поднялся до 25%
 
   section.classList.add('works--armed');
 
@@ -267,10 +269,9 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 
   const render = () => {
     frame = null;
-    const vh = window.innerHeight;
-    const rect = section.getBoundingClientRect();
-    let p = (START_AT * vh - rect.top) / ((START_AT - END_AT) * vh);
-    p = Math.min(1, Math.max(0, p));
+    const distance = Math.max(1, pin.offsetHeight - stage.offsetHeight); // длина закреплённой части
+    const rect = pin.getBoundingClientRect();
+    let p = Math.min(1, Math.max(0, -rect.top / distance)); // 0, пока сцена не дошла до верха экрана
     if (reduceMotion) p = p >= 0.5 ? 1 : 0; // без плавной заливки, сразу белый
     const eased = 1 - (1 - p) * (1 - p); // в начале быстрее, к концу замедляется
 
@@ -282,7 +283,7 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 
     if (header) {
       const mid = header.offsetHeight / 2;
-      header.classList.toggle('is-on-light', p >= 0.5 && rect.top < mid && rect.bottom > mid);
+      header.classList.toggle('is-on-light', eased >= 0.55 && section.getBoundingClientRect().bottom > mid);
     }
   };
 
