@@ -250,35 +250,19 @@ img {
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   padding: calc(20 * var(--u)) var(--gutter);
-  min-height: calc(79 * var(--u)); /* 20 + кнопка 39 + 20: высота шапки, как когда кнопка была внутри */
-  color: #fff; /* запасной вариант, если скрипт не загрузился: обычная белая шапка */
+  color: var(--color-text);
+  transition: color 0.3s ease;
 }
 
-/* Шапка из двух слоёв (второй слой — копия шапки, её создаёт js/main.js, класс js-mirror):
-   1) нижний слой .header--mirror: белый текст с режимом difference. Над тёмным фоном буквы
-      белые, над белым объектом они становятся тёмными; инвертируется только та часть буквы,
-      которая перекрывает светлое.
-   2) верхний слой (сама шапка): та же надпись цветом акцента с режимом lighten. Она берёт
-      более светлое из двух: над белым фоном (где инверсия дала тёмный) буквы становятся
-      синими, над тёмным (где инверсия дала белый) остаются белыми с лёгким синим оттенком.
-   Так контраст сильнее, чем у чистой инверсии. */
-.js-mirror .header.header--mirror {
-  z-index: 2;
-  color: #fff;
-  mix-blend-mode: difference;
-  pointer-events: none;
+/* Когда шапка над белой секцией работ, текст становится тёмным, а кнопка чёрной
+   (класс ставит js/main.js). Заливки у шапки нет. */
+.header.is-on-light {
+  color: var(--color-bg);
 }
 
-.js-mirror .header:not(.header--mirror) {
-  z-index: 3;
-  color: var(--color-accent);
-  mix-blend-mode: lighten;
-}
-
-/* Над градиентом инверсия даёт грязные цвета, поэтому там нижний слой обычный белый
-   (класс ставит js/main.js, когда градиент заезжает под шапку) */
-.js-mirror .header.header--mirror.is-on-media {
-  mix-blend-mode: normal;
+.header.is-on-light .header__cta {
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
 .logo {
@@ -307,19 +291,8 @@ img {
 }
 
 .header__cta {
-  position: fixed;
-  top: calc(20 * var(--u));
-  right: var(--gutter);
-  z-index: 3;
+  justify-self: end;
   transition: color 0.08s linear 0.12s, background-color 0.3s ease;
-}
-
-/* Когда заливка секции работ стала полностью белой, кнопка шапки тёмная (класс ставит
-   js/main.js). Цвета переключаются плавно. */
-.header__cta.is-on-light {
-  background: var(--color-bg);
-  color: var(--color-text);
-  transition: color 0.35s ease, background-color 0.35s ease;
 }
 
 
@@ -352,8 +325,7 @@ img {
   }
 }
 
-.nav__list a:focus-visible .roll__char,
-.nav__list a.is-hover .roll__char { /* is-hover: js/main.js повторяет ховер на копии шапки */
+.nav__list a:focus-visible .roll__char {
   transform: translateY(-1.2em);
 }
 
@@ -685,34 +657,14 @@ img {
   z-index: 0;
 }
 
-.works__fill {
-  --feather: calc(64 * var(--u)); /* ширина мягкого края у границы заливки */
-}
-
 .works__fill span {
   position: absolute;
   top: 0;
   bottom: 0;
   width: calc(25% + 1px); /* +1px: колонки слегка перекрываются, шва между ними не будет */
-  overflow: hidden;
-  /* Мягкое начало колонки у линии сетки: белое проявляется плавно, а не сразу.
-     Мягкость исчезает по мере заливки (при --f = 1 маски нет), чтобы в конце всё было ровно белым. */
-  -webkit-mask-image: linear-gradient(to right, transparent 0, #000 calc((1 - var(--f, 0)) * var(--feather)));
-  mask-image: linear-gradient(to right, transparent 0, #000 calc((1 - var(--f, 0)) * var(--feather)));
-}
-
-/* Белая полоса со смазанным правым краем. Она едет слева направо (translateX), а не растягивается,
-   поэтому ширина мягкого края постоянная. Благодаря ему буквы шапки меняют цвет на границе
-   плавно, а не резким швом. */
-.works__fill span::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: calc(100% + var(--feather));
-  background: linear-gradient(to right, var(--color-text) calc(100% - var(--feather)), rgb(255 255 255 / 0));
-  transform: translateX(calc((1 - var(--f, 0)) * -100%));
+  background: var(--color-text);
+  transform: scaleX(var(--f, 0));
+  transform-origin: left center;
   will-change: transform;
 }
 
