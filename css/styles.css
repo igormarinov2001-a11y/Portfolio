@@ -211,6 +211,12 @@ img {
   height: calc(12 * var(--u));
 }
 
+/* Толщина линии стрелки подобрана под толщину штриха текста кнопки (Medium 15px ≈ 1.25px):
+   1.5 в единицах SVG при размере 12px на экране 1920 даёт ≈ 1.3px. */
+.btn__arrow path {
+  stroke-width: 1.5;
+}
+
 /* То же при переходе с клавиатуры (Tab) */
 .btn:focus-visible {
   color: var(--btn-hover-color);
