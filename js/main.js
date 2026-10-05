@@ -249,3 +249,48 @@ document.querySelectorAll('[data-marquee]').forEach((el) => {
   track.append(makeGroup(), makeGroup());
   el.append(track);
 });
+
+
+// Секция работ: при скролле фон становится белым. Четыре колонки (между линиями сетки)
+// заливаются слева направо одновременно, потом появляются работы и кнопка.
+// --f (0…1) — прогресс заливки; is-in — заливка закончилась, показываем контент.
+// Пока секция под шапкой, шапка становится тёмной (is-on-light), чтобы не пропасть на белом.
+document.querySelectorAll('[data-works]').forEach((section) => {
+  const header = document.querySelector('.header');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const START_AT = 0.85; // заливка начинается, когда верх секции поднялся до 85% высоты экрана
+  const END_AT = 0.25; // и заканчивается, когда он поднялся до 25%
+
+  section.classList.add('works--armed');
+
+  let frame = null;
+
+  const render = () => {
+    frame = null;
+    const vh = window.innerHeight;
+    const rect = section.getBoundingClientRect();
+    let p = (START_AT * vh - rect.top) / ((START_AT - END_AT) * vh);
+    p = Math.min(1, Math.max(0, p));
+    if (reduceMotion) p = p >= 0.5 ? 1 : 0; // без плавной заливки, сразу белый
+    const eased = 1 - (1 - p) * (1 - p); // в начале быстрее, к концу замедляется
+
+    section.style.setProperty('--f', eased.toFixed(4));
+
+    // Работы и кнопка появляются, когда заливка закончилась (с запасом, чтобы не мигало)
+    if (p >= 0.98) section.classList.add('is-in');
+    else if (p < 0.7) section.classList.remove('is-in');
+
+    if (header) {
+      const mid = header.offsetHeight / 2;
+      header.classList.toggle('is-on-light', p >= 0.5 && rect.top < mid && rect.bottom > mid);
+    }
+  };
+
+  const update = () => {
+    if (!frame) frame = requestAnimationFrame(render);
+  };
+
+  render();
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+});

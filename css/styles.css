@@ -250,6 +250,21 @@ img {
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   padding: calc(20 * var(--u)) var(--gutter);
+  color: var(--color-text);
+  transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+/* Когда шапка над белой секцией работ, она становится тёмной на белой подложке
+   (класс ставит js/main.js). Подложка нужна, чтобы текст читался и над фотографиями проектов,
+   которые заезжают под шапку. */
+.header.is-on-light {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+
+.header.is-on-light .header__cta {
+  background: var(--color-bg);
+  color: var(--color-text);
 }
 
 .logo {
@@ -279,6 +294,7 @@ img {
 
 .header__cta {
   justify-self: end;
+  transition: color 0.08s linear 0.12s, background-color 0.3s ease;
 }
 
 
@@ -317,8 +333,12 @@ img {
 
 @media (prefers-reduced-motion: reduce) {
   .work img,
-  .work__strip {
-    transition: none;
+  .work__strip,
+  .works--armed .works__label,
+  .works--armed .work,
+  .works--armed .works__more,
+  .header {
+    transition: none !important;
   }
 
   .marquee__track {
@@ -597,8 +617,102 @@ img {
 .works {
   position: relative;
   z-index: 1;
+  isolation: isolate;
   padding: calc(180 * var(--u)) var(--gutter);
 }
+
+/* Белая заливка секции при скролле. Четыре колонки (между линиями сетки) растут слева
+   направо одновременно: каждая начинается от левого края или от своей линии.
+   Прогресс --f (0…1) считает js/main.js. */
+.works__fill,
+.works__lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.works__fill {
+  z-index: 0;
+}
+
+.works__fill span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 25%;
+  background: var(--color-text);
+  transform: scaleX(var(--f, 0));
+  transform-origin: left center;
+  will-change: transform;
+}
+
+.works__fill span:nth-child(1) { left: 0; }
+.works__fill span:nth-child(2) { left: 25%; }
+.works__fill span:nth-child(3) { left: 50%; }
+.works__fill span:nth-child(4) { left: 75%; }
+
+/* Линии сетки поверх заливки: тёмные с прозрачностью 10%, поэтому на тёмном фоне не видны,
+   а на белом проступают тонкими серыми линиями */
+.works__lines {
+  z-index: 1;
+}
+
+.works__lines span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: rgb(11 11 11 / 0.1);
+}
+
+.works__lines span:nth-child(1) { left: calc(25% - 1px); }
+.works__lines span:nth-child(2) { left: calc(50% - 1px); }
+.works__lines span:nth-child(3) { left: calc(75% - 1px); }
+
+.works__label,
+.works__grid,
+.works__more {
+  position: relative;
+  z-index: 2;
+}
+
+/* Когда скрипт работает (works--armed): секция белая, подпись и кнопка тёмные, а подпись,
+   карточки и кнопка скрыты и появляются, когда заливка закончилась (is-in). */
+.works--armed .works__label {
+  color: var(--color-bg);
+}
+
+.works--armed .works__more {
+  --btn-fill: var(--color-accent);
+  --btn-hover-color: var(--color-text);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.works--armed .works__label,
+.works--armed .work,
+.works--armed .works__more {
+  opacity: 0;
+  transform: translateY(calc(24 * var(--u)));
+  transition: opacity 0.6s cubic-bezier(0.22, 0.61, 0.36, 1), transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.works--armed .works__more {
+  transition: opacity 0.6s cubic-bezier(0.22, 0.61, 0.36, 1), transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1), color 0.08s linear 0.12s;
+}
+
+.works--armed.is-in .works__label,
+.works--armed.is-in .work,
+.works--armed.is-in .works__more {
+  opacity: 1;
+  transform: none;
+}
+
+/* Карточки появляются по очереди, кнопка последней */
+.works--armed .work:nth-child(2) { transition-delay: 0.08s; }
+.works--armed .work:nth-child(3) { transition-delay: 0.16s; }
+.works--armed .work:nth-child(4) { transition-delay: 0.24s; }
+.works--armed .works__more { transition-delay: 0.36s, 0.36s, 0.12s; }
 
 .works__label {
   margin-bottom: calc(23 * var(--u));
