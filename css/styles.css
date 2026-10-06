@@ -1087,18 +1087,18 @@ html.is-loading .loader {
     position: absolute;
     left: 0;
     width: 100%;
-    height: 1px;
+    height: 2px;
     background: currentColor;
     transition: transform 0.3s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.2s ease;
   }
 
   .burger span:nth-child(1) { top: 0; }
-  .burger span:nth-child(2) { top: calc(50% - 0.5px); }
+  .burger span:nth-child(2) { top: calc(50% - 1px); }
   .burger span:nth-child(3) { bottom: 0; }
 
-  html.is-menu-open .burger span:nth-child(1) { transform: translateY(calc(8.5 * var(--u))) rotate(45deg); }
+  html.is-menu-open .burger span:nth-child(1) { transform: translateY(calc(8 * var(--u))) rotate(45deg); }
   html.is-menu-open .burger span:nth-child(2) { opacity: 0; }
-  html.is-menu-open .burger span:nth-child(3) { transform: translateY(calc(-8.5 * var(--u))) rotate(-45deg); }
+  html.is-menu-open .burger span:nth-child(3) { transform: translateY(calc(-8 * var(--u))) rotate(-45deg); }
 
   /* Меню: на весь экран, лежит под логотипом и бургером (z-index: -1 внутри шапки).
      Пока меню открыто, инверсия шапки выключена. */
@@ -1107,9 +1107,9 @@ html.is-loading .loader {
     inset: 0;
     z-index: -1;
     display: flex;
-    align-items: flex-end;
-    padding: calc(96 * var(--u) + var(--top-inset)) var(--gutter) calc(48 * var(--u));
-    background: var(--color-bg);
+    align-items: center; /* список по центру экрана, как в макете */
+    padding: calc(var(--top-inset) + 12 * var(--u)) var(--gutter) 0;
+    background: var(--color-accent);
     visibility: hidden;
     opacity: 0;
     transition: opacity 0.3s ease, visibility 0s linear 0.3s;
@@ -1132,13 +1132,23 @@ html.is-loading .loader {
 
   .nav__list {
     flex-direction: column;
-    gap: calc(4 * var(--u));
+    gap: 0;
   }
 
   .nav__list a {
+    display: block;
     font-size: calc(44 * var(--u));
-    line-height: 1.1;
-    letter-spacing: -0.02em;
+    line-height: calc(64 * var(--u)); /* шаг 64px между пунктами */
+    letter-spacing: 0;
+  }
+
+  .nav__list .serif {
+    font-size: 0.9em;
+  }
+
+  /* Стрелки на телефоне толще: на тонком экране штрих 1.3px читался слабо */
+  .btn__arrow path {
+    stroke-width: 2.2;
   }
 
   /* Первый экран */
