@@ -643,21 +643,21 @@ html.is-loading .loader {
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  /* Окно градиента — прямоугольник: сверху --y, шириной от --w0 до всего экрана и высотой от --h0
-     до всего экрана (по прогрессу --p). Сам градиент всегда на весь экран и не масштабируется
-     (его не перерисовывают при росте окна), окно только «открывает» его через clip-path.
-     Отступы окна от краёв экрана (--ct сверху, --cb снизу, --cs по бокам) считает js/main.js. */
-  clip-path: inset(var(--ct, 0px) var(--cs, 0px) var(--cb, 0px) var(--cs, 0px));
 }
 
-/* Слой с картинкой и холстом: высота --h1, едет вместе с окном (transform на GPU) */
+/* Слой с картинкой и холстом: всегда в полный размер (ширина экрана × --h1), а окно градиента
+   получается его масштабированием и сдвигом через transform. Это работает на видеокарте и не
+   вызывает перерисовок и пересчёта вёрстки (как на референсе, там тоже scale у холста).
+   Положение и масштаб на каждом кадре ставит js/main.js; градиент мягкий, поэтому
+   растяжение по осям незаметно. */
 .reveal__layer {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
+  width: 100%;
   height: var(--h1);
-  transform: translate3d(0, var(--y), 0);
+  transform-origin: 0 0;
+  transform: translate3d(0, calc(100 * var(--vh)), 0); /* запасное: пока скрипт не загрузился, градиента не видно */
   will-change: transform;
 }
 
@@ -1083,8 +1083,20 @@ html.is-loading .loader {
     background: none;
     color: var(--color-text);
     font-size: calc(16 * var(--u));
-    mix-blend-mode: difference; /* как и остальная шапка: на светлом фоне становится тёмным */
+    mix-blend-mode: normal;
     overflow: visible;
+  }
+
+  /* Инверсия шапки на телефоне только над белой секцией работ (html.is-over-works ставит
+     js/main.js): постоянная инверсия через mix-blend-mode слишком тяжёлая для iPhone и
+     давала рывки при скролле. Над хиро, градиентом и About фон и так тёмный. */
+  .header {
+    mix-blend-mode: normal;
+  }
+
+  html.is-over-works:not(.is-menu-open) .header:not(.is-on-media),
+  html.is-over-works:not(.is-menu-open):not(.is-media-under-header) .header__cta {
+    mix-blend-mode: difference;
   }
 
   .header__cta::before {

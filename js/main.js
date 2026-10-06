@@ -1,13 +1,28 @@
-// Высота экрана для вёрстки: --vh = 1% реальной высоты окна (innerHeight). Так CSS и скрипты
-// считают от одного числа (в мобильных браузерах и встроенных окнах 100svh бывает другим).
+// Высота экрана для вёрстки: --vh = 1% устойчивой высоты окна (минус верхний системный отступ).
+// Так CSS и скрипты считают от одного числа (в мобильных браузерах и встроенных окнах 100svh
+// бывает другим). «Устойчивая» значит: когда на iPhone при скролле сворачивается и появляется
+// панель адреса, высота окна меняется на 50–100px, и пересчитывать вёрстку на каждый такой
+// кадр нельзя: страница дёргалась, а градиент ломался. Поэтому высоту обновляем только если
+// сменилась ширина (поворот) или окно изменилось сильно; мелкие изменения только уменьшают её.
+let viewportH = window.innerHeight;
+const viewportHeight = () => viewportH;
 (() => {
   const root = document.documentElement;
+  let lastW = -1;
+  let lastH = -1;
   const set = () => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    if (w !== lastW || Math.abs(h - viewportH) > 160) viewportH = h;
+    else if (h < viewportH) viewportH = h;
+    if (w === lastW && viewportH === lastH) return;
+    lastW = w;
+    lastH = viewportH;
     // Сколько сверху занято системой: в обычном браузере 0, во встроенном окне (телефон) страница
     // начинается ниже его верхней панели. Измеряем по положению <body>.
     const top = Math.max(0, Math.round(document.body.getBoundingClientRect().top + window.scrollY));
     root.style.setProperty('--top-inset', `${top}px`);
-    root.style.setProperty('--vh', `${(window.innerHeight - top) / 100}px`);
+    root.style.setProperty('--vh', `${(viewportH - top) / 100}px`);
   };
   set();
   window.addEventListener('resize', set);
@@ -326,6 +341,7 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   const hero = document.querySelector('.hero');
   const header = document.querySelector('.header');
   const media = reveal.querySelector('.reveal__media');
+  const layer = reveal.querySelector('.reveal__layer');
   const probe = reveal.querySelector('.reveal__probe:not(.reveal__probe--end)');
   const probeEnd = reveal.querySelector('.reveal__probe--end');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -345,36 +361,36 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   let startWidth = 0; // ширина окна градиента в самом начале
   let startHeight = 0; // высота окна градиента в самом начале
   let endHeight = 0; // высота окна градиента, когда он раскрылся полностью (--h1)
+  let headerHeight = 0; // высота шапки (читаем один раз: чтение на каждом кадре заставляло браузер пересчитывать вёрстку)
 
   const measure = () => {
     distance = reveal.offsetHeight || 1;
-    extra = Math.max(0, hero.offsetHeight - window.innerHeight);
+    extra = Math.max(0, hero.offsetHeight - viewportHeight());
+    headerHeight = header ? header.offsetHeight : 0;
     const style = getComputedStyle(reveal);
     peek = parseFloat(style.getPropertyValue('--peek')) || 0.103;
     if (!reduceMotion) smooth = parseFloat(style.getPropertyValue('--reveal-smooth')) || 0.4;
     ease = reduceMotion ? 0 : parseFloat(style.getPropertyValue('--reveal-ease')) || 0;
-    start = window.innerHeight * (1 - peek);
+    start = viewportHeight() * (1 - peek);
     startWidth = probe ? probe.offsetWidth : window.innerWidth * 0.32;
-    startHeight = probe ? probe.offsetHeight : window.innerHeight * 0.2;
-    endHeight = probeEnd ? probeEnd.offsetHeight : window.innerHeight;
+    startHeight = probe ? probe.offsetHeight : viewportHeight() * 0.2;
+    endHeight = probeEnd ? probeEnd.offsetHeight : viewportHeight();
   };
 
   const render = () => {
     const sigma = window.scrollY - extra; // скролл, отсчитанный от момента, когда низ хиро у низа экрана
     const y = (1 - current) * start + Math.max(0, -sigma) - Math.max(0, sigma - distance);
-    reveal.style.setProperty('--p', current.toFixed(4));
-    reveal.style.setProperty('--y', `${y.toFixed(1)}px`);
-    // Окно градиента: прямоугольник [верх y; ширина и высота растут от стартовых до экрана]
+    // Окно градиента: прямоугольник [верх y; ширина и высота растут от стартовых до конечных].
+    // Слой с градиентом всегда полного размера, окно получается его масштабом и сдвигом (transform).
     const screenW = document.documentElement.clientWidth;
-    const screenH = window.innerHeight;
     const boxW = startWidth + (screenW - startWidth) * current;
     const boxH = startHeight + (endHeight - startHeight) * current;
-    media.style.setProperty('--ct', `${Math.max(0, y).toFixed(1)}px`);
-    media.style.setProperty('--cb', `${Math.max(0, screenH - y - boxH).toFixed(1)}px`);
-    media.style.setProperty('--cs', `${((screenW - boxW) / 2).toFixed(1)}px`);
+    const scaleX = boxW / screenW;
+    const scaleY = endHeight ? boxH / endHeight : 1;
+    layer.style.transform = `translate3d(${((screenW - boxW) / 2).toFixed(2)}px, ${y.toFixed(2)}px, 0) scale(${scaleX.toFixed(4)}, ${scaleY.toFixed(4)})`;
     // Пока градиент под шапкой, инверсию текста шапки выключаем (на градиенте она даёт грязные цвета)
     if (header) {
-      const onMedia = y < header.offsetHeight && y + boxH > 0;
+      const onMedia = y < headerHeight && y + boxH > 0;
       header.classList.toggle('is-on-media', onMedia);
       document.documentElement.classList.toggle('is-media-under-header', onMedia); // для кнопки шапки, она вне <header>
     }
@@ -420,7 +436,7 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   const picture = media.querySelector('img');
   let shader = null;
   const startShader = () => {
-    shader = createGradient(canvas, picture, !reduceMotion, () => ({ width: document.documentElement.clientWidth, height: endHeight || window.innerHeight }));
+    shader = createGradient(canvas, picture, !reduceMotion, () => ({ width: document.documentElement.clientWidth, height: endHeight || viewportHeight() }));
     if (!shader) return;
     reveal.classList.add('has-shader');
     canvas.addEventListener('webglcontextlost', (e) => {
@@ -591,6 +607,7 @@ document.querySelectorAll('[data-works]').forEach((section) => {
   section.classList.add('works--armed');
 
   let frame = null;
+  let headerHeight = header ? header.offsetHeight : 0; // читаем один раз, обновляем при resize
 
   const render = () => {
     frame = null;
@@ -606,11 +623,16 @@ document.querySelectorAll('[data-works]').forEach((section) => {
     if (p >= 0.98) section.classList.add('is-in');
     else if (p < 0.7) section.classList.remove('is-in');
 
+    const bounds = section.getBoundingClientRect();
     if (cta) {
-      const mid = header ? header.offsetHeight / 2 : 40;
+      const mid = headerHeight / 2 || 40;
       // Кнопка шапки темнеет, только когда заливка полностью белая (то же условие, что и is-in)
-      cta.classList.toggle('is-on-light', section.classList.contains('is-in') && section.getBoundingClientRect().bottom > mid);
+      cta.classList.toggle('is-on-light', section.classList.contains('is-in') && bounds.bottom > mid);
     }
+
+    // Шапка под секцией работ: на телефоне инверсия (mix-blend-mode) включается только здесь,
+    // потому что в остальных местах она дорогая для iPhone и давала рывки при скролле
+    document.documentElement.classList.toggle('is-over-works', bounds.top < headerHeight && bounds.bottom > 0);
   };
 
   const update = () => {
@@ -619,5 +641,8 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 
   render();
   window.addEventListener('scroll', update, { passive: true });
-  window.addEventListener('resize', update);
+  window.addEventListener('resize', () => {
+    headerHeight = header ? header.offsetHeight : 0;
+    update();
+  });
 });
