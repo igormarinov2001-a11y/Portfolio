@@ -468,6 +468,7 @@ html.is-loading .loader {
   .work img,
   .work__strip,
   .works--armed .works__label,
+.works--armed .works__tag,
   .works--armed .work,
   .works--armed .works__more,
   .header {
@@ -878,16 +879,24 @@ html.is-loading .loader {
 .works__lines span:nth-child(2) { left: calc(50% - 1px); }
 .works__lines span:nth-child(3) { left: calc(75% - 1px); }
 
+.works__head,
 .works__label,
+.works__tag,
 .works__grid,
 .works__more {
   position: relative;
   z-index: 2;
 }
 
+/* Подпись «Digital Design» справа от заголовка есть только на телефоне */
+.works__tag {
+  display: none;
+}
+
 /* Когда скрипт работает (works--armed): фон белый, подпись и кнопка тёмные, а подпись,
    карточки и кнопка скрыты и появляются, когда заливка закончилась (is-in). */
-.works--armed .works__label {
+.works--armed .works__label,
+.works--armed .works__tag {
   color: var(--color-bg);
 }
 
@@ -899,6 +908,7 @@ html.is-loading .loader {
 }
 
 .works--armed .works__label,
+.works--armed .works__tag,
 .works--armed .work,
 .works--armed .works__more {
   opacity: 0;
@@ -911,6 +921,7 @@ html.is-loading .loader {
 }
 
 .works--armed.is-in .works__label,
+.works--armed.is-in .works__tag,
 .works--armed.is-in .work,
 .works--armed.is-in .works__more {
   opacity: 1;
@@ -1272,22 +1283,60 @@ html.is-loading .loader {
     padding-bottom: calc(16 * var(--u));
   }
 
-  /* Works: пока одна колонка (макета нет) */
+  /* Works: белая секция, четыре карточки друг под другом (371px, зазор 4px), линии сетки
+     светло-серые 2px, заголовок слева и «Digital Design» справа */
   .works__body {
-    padding: calc(80 * var(--u)) var(--gutter);
+    padding: calc(156 * var(--u)) 0 calc(110 * var(--u));
+  }
+
+  .works__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding: 0 var(--gutter);
+    margin-bottom: calc(9 * var(--u));
   }
 
   .works__label {
-    margin-bottom: calc(24 * var(--u));
-    font-size: calc(20 * var(--u));
+    margin-bottom: 0;
+    font-size: calc(16 * var(--u));
+  }
+
+  .works__tag {
+    display: block;
+    font-size: calc(16 * var(--u));
+    line-height: 1;
+  }
+
+  .works--armed .works__tag {
+    color: var(--color-bg);
   }
 
   .works__grid {
     grid-template-columns: 1fr;
-    gap: calc(12 * var(--u));
+    gap: calc(4 * var(--u));
+    padding: 0 calc(11 * var(--u));
   }
 
+  /* На телефоне порядок работ другой: 3 и 4 меняются местами */
+  .work:nth-child(3) { order: 4; }
+  .work:nth-child(4) { order: 3; }
+
   .works__more {
-    margin-top: calc(32 * var(--u));
+    margin-top: calc(44 * var(--u));
   }
+
+  /* Заливка: две колонки (до центральной линии и после неё) вместо четырёх */
+  .works__fill span:nth-child(1) { left: 0; width: calc(50% + 1px); }
+  .works__fill span:nth-child(2) { left: 50%; width: 50%; }
+  .works__fill span:nth-child(3),
+  .works__fill span:nth-child(4) { display: none; }
+
+  .works__lines span {
+    width: calc(2 * var(--u));
+    background: rgb(11 11 11 / 0.0615); /* на белом выходит #f0f0f0, на тёмном не видно */
+  }
+
+  .works__lines span:nth-child(1) { left: calc(9 * var(--u)); }
+  .works__lines span:nth-child(3) { left: auto; right: calc(9 * var(--u)); }
 }
