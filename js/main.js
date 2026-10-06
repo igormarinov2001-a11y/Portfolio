@@ -2,7 +2,13 @@
 // считают от одного числа (в мобильных браузерах и встроенных окнах 100svh бывает другим).
 (() => {
   const root = document.documentElement;
-  const set = () => root.style.setProperty('--vh', `${window.innerHeight / 100}px`);
+  const set = () => {
+    // Сколько сверху занято системой: в обычном браузере 0, во встроенном окне (телефон) страница
+    // начинается ниже его верхней панели. Измеряем по положению <body>.
+    const top = Math.max(0, Math.round(document.body.getBoundingClientRect().top + window.scrollY));
+    root.style.setProperty('--top-inset', `${top}px`);
+    root.style.setProperty('--vh', `${(window.innerHeight - top) / 100}px`);
+  };
   set();
   window.addEventListener('resize', set);
 })();
@@ -157,15 +163,16 @@ document.querySelectorAll('[data-slideshow]').forEach((box) => {
 });
 
 
-// Живой градиент. Тот же приём, что на референсе: не картинка, а небольшой WebGL-холст,
-// на котором шейдер каждую секунду «переливает» цвета. Холст рисуется в 3 раза меньше экрана
-// (градиент мягкий, это незаметно) и растягивается браузером, поэтому он лёгкий даже на телефоне.
-// Цвета взяты из gradient.webp. Если WebGL недоступен, остаётся картинка.
-const createGradient = (canvas, animated) => {
+// Живой градиент. Как на референсе, это не просто картинка, а небольшой WebGL-холст: твоя
+// картинка gradient.webp лежит на нём текстурой, а шейдер каждую секунду плавно «переливает»
+// её (лёгкое течение + медленный дрейф: приближение, сдвиг, поворот). Холст в 3 раза меньше
+// экрана (градиент мягкий, это незаметно), его растягивает браузер, поэтому он лёгкий даже на
+// телефоне. Если WebGL недоступен, остаётся обычная картинка.
+const createGradient = (canvas, image, animated) => {
   const RES = 1 / 3; // размер холста относительно экрана
-  const SPEED = 0.18; // скорость переливания (больше = быстрее)
+  const SPEED = 1; // скорость переливания и дрейфа (больше = быстрее)
   const gl = canvas.getContext('webgl', { antialias: false, alpha: false, depth: false, stencil: false, powerPreference: 'low-power' });
-  if (!gl) return null;
+  if (!gl || !image.naturalWidth) return null;
 
   const vertex = 'attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}';
   const fragment = `
@@ -174,38 +181,33 @@ const createGradient = (canvas, animated) => {
     #else
     precision mediump float;
     #endif
+    uniform sampler2D u_tex;
     uniform vec2 u_res;
+    uniform float u_aspect;
     uniform float u_time;
 
-    // Палитра из gradient.webp: от почти чёрного через индиго и фиолетовый к сиреневому и голубому
-    vec3 palette(float t) {
-      vec3 c0 = vec3(0.027, 0.012, 0.106);
-      vec3 c1 = vec3(0.122, 0.078, 0.369);
-      vec3 c2 = vec3(0.439, 0.071, 0.925);
-      vec3 c3 = vec3(0.565, 0.318, 0.902);
-      vec3 c4 = vec3(0.388, 0.514, 0.988);
-      vec3 c5 = vec3(0.506, 0.569, 0.988);
-      t = clamp(t, 0., 1.) * 5.;
-      vec3 c = mix(c0, c1, smoothstep(0., 1., t));
-      c = mix(c, c2, smoothstep(1., 2., t));
-      c = mix(c, c3, smoothstep(2., 3., t));
-      c = mix(c, c4, smoothstep(3., 4., t));
-      c = mix(c, c5, smoothstep(4., 5., t));
-      return c;
-    }
-
     void main() {
-      vec2 p = (gl_FragCoord.xy * 2. - u_res) / min(u_res.x, u_res.y);
+      vec2 uv = gl_FragCoord.xy / u_res;
+      float screen = u_res.x / u_res.y;
+      // «cover»: картинка заполняет экран, лишнее обрезается по центру
+      vec2 fit = screen > u_aspect ? vec2(1., u_aspect / screen) : vec2(screen / u_aspect, 1.);
       float t = u_time;
-      // «Жидкость»: плоскость несколько раз плавно изгибается синусами, их фаза плывёт со временем.
-      // Дальше по искривлённым координатам считается мягкая волна, и она красится палитрой.
-      vec2 q = p * 0.7;
-      q += 0.55 * vec2(sin(q.y * 1.3 + t * 1.0), cos(q.x * 1.1 - t * 0.8));
-      q += 0.35 * vec2(sin(q.y * 2.1 - t * 0.7 + 1.7), cos(q.x * 1.9 + t * 0.9 + 0.6));
-      q += 0.12 * vec2(sin(q.y * 3.3 + t * 0.6 + 3.1), cos(q.x * 3.0 - t * 0.5));
-      float w = q.x * 0.9 + q.y * 0.7;
-      float v = 0.5 + 0.5 * sin(w * 1.6 + 1.2 * sin(q.x * 1.3 - q.y * 1.1 + t * 0.5));
-      gl_FragColor = vec4(palette(v), 1.);
+
+      // Течение: координаты слегка плывут волнами (в долях экрана)
+      vec2 flow = vec2(
+        sin(uv.y * 5. + t * 1.1) + 0.5 * sin(uv.y * 9. - t * 0.8),
+        cos(uv.x * 4.5 - t * 0.9) + 0.5 * cos(uv.x * 8. + t * 0.7)
+      );
+      vec2 c = uv - 0.5 + flow * 0.035;
+
+      // Дрейф: лёгкий поворот, приближение и сдвиг
+      float ang = sin(t * 0.35) * 0.05;
+      c = mat2(cos(ang), -sin(ang), sin(ang), cos(ang)) * c;
+      c *= (0.80 + 0.05 * sin(t * 0.4));
+      c += vec2(sin(t * 0.5), cos(t * 0.43)) * 0.03;
+
+      c = c * fit + 0.5;
+      gl_FragColor = vec4(texture2D(u_tex, vec2(c.x, 1. - c.y)).rgb, 1.);
     }`;
 
   const compile = (type, source) => {
@@ -230,12 +232,32 @@ const createGradient = (canvas, animated) => {
   const position = gl.getAttribLocation(program, 'a');
   gl.enableVertexAttribArray(position);
   gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+
+  // Текстура: картинка, уменьшенная до 1024px по ширине (хватает: градиент мягкий)
+  const texW = Math.min(1024, image.naturalWidth);
+  const texH = Math.round((texW * image.naturalHeight) / image.naturalWidth);
+  const scratch = document.createElement('canvas');
+  scratch.width = texW;
+  scratch.height = texH;
+  scratch.getContext('2d').drawImage(image, 0, 0, texW, texH);
+  const texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, scratch);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.uniform1i(gl.getUniformLocation(program, 'u_tex'), 0);
+  gl.uniform1f(gl.getUniformLocation(program, 'u_aspect'), texW / texH);
+
   const resLoc = gl.getUniformLocation(program, 'u_res');
   const timeLoc = gl.getUniformLocation(program, 'u_time');
+  const phone = window.matchMedia('(max-width: 900px)');
 
   const startedAt = performance.now();
   let active = false;
   let frame = 0;
+  let skip = false;
 
   const draw = () => {
     gl.uniform1f(timeLoc, ((performance.now() - startedAt) / 1000) * SPEED);
@@ -257,8 +279,14 @@ const createGradient = (canvas, animated) => {
   const loop = () => {
     frame = 0;
     if (!active || document.hidden) return;
-    draw();
+    // На телефоне рисуем каждый второй кадр (30 к/с): течение медленное, разницы не видно, а нагрузка вдвое меньше
+    skip = phone.matches ? !skip : false;
+    if (!skip) draw();
     frame = requestAnimationFrame(loop);
+  };
+
+  const wake = () => {
+    if (active && animated && !frame && !document.hidden) frame = requestAnimationFrame(loop);
   };
 
   resize();
@@ -266,13 +294,11 @@ const createGradient = (canvas, animated) => {
 
   return {
     resize,
+    wake,
     // Крутим холст только пока градиент виден на экране
     setActive(on) {
       active = on;
-      if (on && animated && !frame && !document.hidden) frame = requestAnimationFrame(loop);
-    },
-    wake() {
-      if (active && animated && !frame && !document.hidden) frame = requestAnimationFrame(loop);
+      wake();
     },
   };
 };
@@ -351,14 +377,23 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
 
   // Живой градиент (WebGL); без него остаётся картинка
   const canvas = reveal.querySelector('.reveal__canvas');
-  const shader = canvas ? createGradient(canvas, !reduceMotion) : null;
-  if (shader) {
+  const picture = media.querySelector('img');
+  let shader = null;
+  const startShader = () => {
+    shader = createGradient(canvas, picture, !reduceMotion);
+    if (!shader) return;
     reveal.classList.add('has-shader');
     canvas.addEventListener('webglcontextlost', (e) => {
       e.preventDefault();
+      shader = null;
       reveal.classList.remove('has-shader');
     });
-    document.addEventListener('visibilitychange', () => shader.wake());
+    document.addEventListener('visibilitychange', () => shader && shader.wake());
+    render(); // сообщаем холсту, виден ли он сейчас
+  };
+  if (canvas && picture) {
+    if (picture.complete && picture.naturalWidth) startShader();
+    else picture.addEventListener('load', startShader, { once: true });
   }
 
   measure();
