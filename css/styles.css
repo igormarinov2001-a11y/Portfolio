@@ -612,6 +612,7 @@ html.is-loading .loader {
   --w0: 32vw;             /* ширина в начале */
   --h0: 18vw;             /* высота в начале (16:9 от ширины) */
   --reveal-distance: 20svh; /* сколько нужно проскроллить, чтобы градиент закрыл экран */
+  --peek: 0.103;          /* доля высоты экрана, на которую блок выглядывает в начале (читает js/main.js) */
   position: relative;
   height: var(--reveal-distance);
 }
@@ -710,6 +711,11 @@ html.is-loading .loader {
 
 .about .char.is-on {
   color: var(--color-text);
+}
+
+/* Переносы строк только для телефона (на десктопе строки заданы блоками .line) */
+.m-br {
+  display: none;
 }
 
 /* Маленький абзац справа внизу: сдвинут от левого края текста на 629px */
@@ -958,78 +964,203 @@ html.is-loading .loader {
 
 /* ==========================================================================
    9. Телефон и планшет
-   Мобильного макета пока нет — это аккуратная заглушка, чтобы страница
-   не ломалась. Переделаем, когда будет дизайн.
+   Мобильный макет нарисован на ширине 393px. Размеры записаны в тех же «пикселях макета»
+   (calc(N * var(--u))), а --u здесь = 1/393 ширины экрана, но не меньше 0.9px и не больше
+   1.1px: на телефонах 360–430px всё масштабируется пропорционально, на планшете не раздувается.
+   Блоки, для которых мобильного макета ещё нет (Selected Works), пока только
+   перестроены в одну колонку.
    ========================================================================== */
+
+/* Бургер и мобильное меню на десктопе скрыты */
+.burger {
+  display: none;
+}
 
 @media (max-width: 900px) {
   :root {
-    --u: 1px;
+    --u: clamp(0.9px, calc(100vw / 393), 1.1px);
+    --gutter: calc(16 * var(--u));
   }
 
-  .nav {
+  /* Линии сетки: две по краям (10px от края) и одна по центру, толщина 2px */
+  .grid-lines span:nth-child(1) { left: calc(9 * var(--u)); }
+  .grid-lines span:nth-child(3) { left: auto; right: calc(9 * var(--u)); }
+
+  /* Шапка: логотип слева, «Book a call» текстом и бургер справа */
+  .header {
+    grid-template-columns: 1fr auto;
+    min-height: calc(56 * var(--u));
+    padding-top: calc(14 * var(--u));
+    padding-bottom: calc(14 * var(--u));
+  }
+
+  .logo {
+    font-size: calc(15.6 * var(--u));
+  }
+
+  .header__cta {
+    top: calc(18 * var(--u));
+    right: calc(66 * var(--u));
+    gap: calc(10 * var(--u));
+    height: calc(20 * var(--u));
+    padding: 0;
+    background: none;
+    color: var(--color-text);
+    font-size: calc(16 * var(--u));
+    mix-blend-mode: difference; /* как и остальная шапка: на светлом фоне становится тёмным */
+    overflow: visible;
+  }
+
+  .header__cta::before {
     display: none;
   }
 
-  .header {
-    grid-template-columns: 1fr auto;
+  .header__cta.is-on-light {
+    background: none;
+    color: var(--color-text);
   }
 
-  .hero {
+  html.is-media-under-header .header__cta {
+    mix-blend-mode: normal;
+  }
+
+  /* Бургер: три тонкие линии 20px */
+  .burger {
+    position: relative;
+    z-index: 1;
+    display: block;
+    justify-self: end;
+    width: calc(20 * var(--u));
+    height: calc(18 * var(--u));
+    margin-right: calc(4 * var(--u));
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .burger::after { /* увеличенная область нажатия */
+    content: "";
+    position: absolute;
+    inset: -14px;
+  }
+
+  .burger span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: currentColor;
+    transition: transform 0.3s cubic-bezier(0.65, 0, 0.35, 1), opacity 0.2s ease;
+  }
+
+  .burger span:nth-child(1) { top: 0; }
+  .burger span:nth-child(2) { top: calc(50% - 0.5px); }
+  .burger span:nth-child(3) { bottom: 0; }
+
+  html.is-menu-open .burger span:nth-child(1) { transform: translateY(calc(8.5 * var(--u))) rotate(45deg); }
+  html.is-menu-open .burger span:nth-child(2) { opacity: 0; }
+  html.is-menu-open .burger span:nth-child(3) { transform: translateY(calc(-8.5 * var(--u))) rotate(-45deg); }
+
+  /* Меню: на весь экран, лежит под логотипом и бургером (z-index: -1 внутри шапки).
+     Пока меню открыто, инверсия шапки выключена. */
+  .nav {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    display: flex;
+    align-items: flex-end;
+    padding: calc(96 * var(--u)) var(--gutter) calc(48 * var(--u));
+    background: var(--color-bg);
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+  }
+
+  html.is-menu-open {
+    overflow: hidden;
+  }
+
+  html.is-menu-open .nav {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+
+  html.is-menu-open .header,
+  html.is-menu-open .header__cta {
+    mix-blend-mode: normal;
+  }
+
+  .nav__list {
     flex-direction: column;
-    justify-content: center;
-    gap: 48px;
-    padding-top: 100px;
-    padding-bottom: 48px;
+    gap: calc(4 * var(--u));
   }
 
-  .hero__word {
-    font-size: 16vw;
+  .nav__list a {
+    font-size: calc(44 * var(--u));
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  /* Первый экран */
+  .hero {
+    justify-content: center;
+    padding: calc(4 * var(--u)) var(--gutter) calc(52 * var(--u));
   }
 
   .hero__the {
-    font-size: 6vw;
-    line-height: 1;
+    margin-bottom: calc(5 * var(--u));
+    font-size: calc(12 * var(--u));
+    line-height: calc(24 * var(--u));
+  }
+
+  .hero__word {
+    font-size: calc(62 * var(--u));
   }
 
   .hero__slides {
-    width: 60vw;
+    width: calc(164 * var(--u));
+    margin: calc(13.5 * var(--u)) 0;
   }
 
-  .hero__services,
-  .hero__tagline {
-    position: static;
-    align-self: flex-start;
+  .hero__actions {
+    margin-top: calc(48 * var(--u));
+  }
+
+  .hero__services {
+    display: none;
   }
 
   .hero__tagline {
-    width: auto;
+    right: auto;
+    left: var(--gutter);
+    bottom: calc(78 * var(--u));
     min-width: 0;
-    max-width: 320px;
   }
 
-  .hero__tagline .line {
-    display: inline;
-    white-space: normal;
-  }
-
+  /* Градиент: выглядывает снизу узким окошком (239px по ширине, 54px над нижним краем) */
   .reveal {
-    --w0: 70vw;
-    --h0: 39.4vw;
+    --w0: calc(239 * var(--u));
+    --h0: calc(134 * var(--u));
+    --peek: 0.0634;
   }
 
+  /* About */
   .about {
-    padding: 80px var(--gutter);
+    padding: calc(209 * var(--u)) var(--gutter) calc(80 * var(--u));
   }
 
   .about__label {
-    margin-bottom: 24px;
-    font-size: 20px;
+    margin-bottom: calc(44 * var(--u));
+    font-size: calc(15 * var(--u));
   }
 
   .about__lead {
-    font-size: 9vw;
-    line-height: 1.12;
+    font-size: calc(32 * var(--u));
+    line-height: calc(37 * var(--u));
+    letter-spacing: -0.008em;
   }
 
   .about .line {
@@ -1038,26 +1169,48 @@ html.is-loading .loader {
   }
 
   .about__note {
-    margin: 48px 0 0;
-    max-width: 420px;
-    font-size: 16px;
+    margin: calc(188 * var(--u)) 0 0;
+    max-width: calc(361 * var(--u));
+    font-size: calc(15 * var(--u));
+    line-height: calc(20 * var(--u));
+    letter-spacing: 0.02em;
+    color: var(--color-muted);
   }
 
-  .works {
-    padding: 80px var(--gutter);
+  .m-br {
+    display: inline;
+  }
+
+  /* Лоадер */
+  .loader {
+    padding: 0 calc(10 * var(--u)) calc(3 * var(--u));
+  }
+
+  .loader__row {
+    font-size: calc(12 * var(--u));
+    line-height: calc(16 * var(--u));
+  }
+
+  .loader__clip {
+    padding-bottom: calc(16 * var(--u));
+  }
+
+  /* Works: пока одна колонка (макета нет) */
+  .works__body {
+    padding: calc(80 * var(--u)) var(--gutter);
   }
 
   .works__label {
-    margin-bottom: 24px;
-    font-size: 20px;
+    margin-bottom: calc(24 * var(--u));
+    font-size: calc(20 * var(--u));
   }
 
   .works__grid {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: calc(12 * var(--u));
   }
 
   .works__more {
-    margin-top: 32px;
+    margin-top: calc(32 * var(--u));
   }
 }

@@ -95,6 +95,23 @@ document.querySelectorAll('.nav__list a').forEach((link) => {
 });
 
 
+// Мобильное меню: бургер открывает и закрывает меню на весь экран (класс is-menu-open на <html>).
+// Закрывается по ссылке в меню, по Esc и при переходе на широкий экран.
+document.querySelectorAll('[data-burger]').forEach((burger) => {
+  const root = document.documentElement;
+  const setOpen = (open) => {
+    root.classList.toggle('is-menu-open', open);
+    burger.setAttribute('aria-expanded', String(open));
+    burger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  };
+
+  burger.addEventListener('click', () => setOpen(!root.classList.contains('is-menu-open')));
+  document.querySelectorAll('.nav a').forEach((link) => link.addEventListener('click', () => setOpen(false)));
+  document.addEventListener('keydown', (e) => e.key === 'Escape' && setOpen(false));
+  window.matchMedia('(min-width: 901px)').addEventListener('change', (e) => e.matches && setOpen(false));
+});
+
+
 // Слайдшоу в hero: картинки внутри [data-slideshow] сменяют друг друга по кругу.
 // Чтобы добавить кадр, достаточно добавить ещё один <img> внутрь этого блока в index.html.
 // Интервал задаётся в миллисекундах в data-interval.
@@ -140,7 +157,7 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   const media = reveal.querySelector('.reveal__media');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const SMOOTHING = reduceMotion ? 1 : 0.4; // 1 = без сглаживания, меньше = плавнее (но и мягче)
-  const PEEK = 0.103; // доля высоты экрана, на которую блок выглядывает в начале (как в CSS)
+  let peek = 0.103; // доля высоты экрана, на которую блок выглядывает в начале (берётся из CSS: --peek)
 
   let current = 0; // сглаженный прогресс раскрытия
   let target = 0;
@@ -152,7 +169,8 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   const measure = () => {
     distance = reveal.offsetHeight || 1;
     extra = Math.max(0, hero.offsetHeight - window.innerHeight);
-    start = window.innerHeight * (1 - PEEK);
+    peek = parseFloat(getComputedStyle(reveal).getPropertyValue('--peek')) || 0.103;
+    start = window.innerHeight * (1 - peek);
   };
 
   const render = () => {
@@ -163,7 +181,9 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
     // Пока градиент под шапкой, инверсию текста шапки выключаем (на градиенте она даёт грязные цвета)
     if (header) {
       const box = media.getBoundingClientRect();
-      header.classList.toggle('is-on-media', box.top < header.offsetHeight && box.bottom > 0);
+      const onMedia = box.top < header.offsetHeight && box.bottom > 0;
+      header.classList.toggle('is-on-media', onMedia);
+      document.documentElement.classList.toggle('is-media-under-header', onMedia); // для кнопки шапки, она вне <header>
     }
     // Дрейф градиента запускается, когда он впервые раскрылся на весь экран, и дальше идёт
     // всё время, пока блок виден (при скролле не прерывается и не сбрасывается)
