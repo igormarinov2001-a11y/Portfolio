@@ -6,6 +6,36 @@
 // сменилась ширина (поворот) или окно изменилось сильно; мелкие изменения только уменьшают её.
 let viewportH = window.innerHeight;
 const viewportHeight = () => viewportH;
+
+// Умеет ли браузер scroll-анимации (animation-timeline: scroll()): Safari 26+, Chrome, Edge.
+// Тогда раскрытие градиента и заливка в Works считаются в браузере, на видеокарте, а не скриптом
+// на каждом кадре скролла. ?nocss=1 в адресе принудительно включает скриптовую версию.
+const scrollTimelines = !/[?&]nocss\b/.test(window.location.search) && !!(window.CSS && CSS.supports('animation-timeline: scroll()'));
+
+// Браузер пересчитывает диапазон scroll-анимации (animation-range в px) только когда меняется
+// само значение, а не когда меняется высота страницы (шрифты, картинки, поворот телефона). Из-за
+// этого заливка и градиент могли начинаться на десятки пикселей позже или раньше. Поэтому каждое
+// измерение записываем с крошечным чередующимся добавком (0 / 0.01px): значение «меняется»,
+// и браузер заново считает диапазон.
+let jitterFlip = 0;
+const jitter = () => (jitterFlip ^= 1) * 0.01;
+
+// Колбэки, которые надо перезапустить при изменении высоты страницы (после загрузки, шрифтов,
+// смены размеров). Регистрируют блоки, которым нужны точные диапазоны scroll-анимаций.
+const remeasureTasks = [];
+if (scrollTimelines) {
+  let timer = 0;
+  const run = () => {
+    clearTimeout(timer);
+    timer = setTimeout(() => remeasureTasks.forEach((task) => task()), 60);
+  };
+  if (window.ResizeObserver) new ResizeObserver(run).observe(document.documentElement);
+  window.addEventListener('load', () => {
+    run();
+    setTimeout(run, 600); // страховка: картинки и шрифты могли догрузиться позже
+  });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(run);
+}
 (() => {
   const root = document.documentElement;
   let lastW = -1;
@@ -378,7 +408,7 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   // стороне браузера (CSS, класс reveal--css), а скрипт только считает стартовые числа и
   // переключает шапку. Иначе (старые браузеры) всё считает скрипт на каждом кадре.
   // ?nocss=1 в адресе принудительно включает скриптовую версию (для сравнения).
-  const cssMode = !/[?&]nocss\b/.test(window.location.search) && window.CSS && CSS.supports('animation-timeline: scroll()');
+  const cssMode = scrollTimelines;
   if (cssMode) reveal.classList.add('reveal--css');
 
   const measure = () => {
@@ -399,7 +429,7 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
       reveal.style.setProperty('--y0', `${start.toFixed(2)}px`);
       reveal.style.setProperty('--sx0', (startWidth / screenW).toFixed(4));
       reveal.style.setProperty('--sy0', (endHeight ? startHeight / endHeight : 0.2).toFixed(4));
-      reveal.style.setProperty('--extra', `${extra}px`);
+      reveal.style.setProperty('--extra', `${(extra + jitter()).toFixed(2)}px`);
     }
   };
 
@@ -489,6 +519,7 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   }
 
   measure();
+  if (cssMode) remeasureTasks.push(measure);
   if (shader) shader.resize();
   target = progress();
   current = target; // при перезагрузке страницы посреди скролла сразу ставим нужный размер
@@ -640,6 +671,20 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 
   section.classList.add('works--armed');
 
+  // Заливка колонок: если браузер умеет scroll-анимации, её ведёт CSS (класс works--css), по
+  // скроллу, на видеокарте. Скрипт только сообщает, где в документе начинается закреплённая
+  // часть (--pin-top). Без анимаций (и при «уменьшении движения») считает скрипт (--f).
+  const cssFill = scrollTimelines && !reduceMotion;
+  const measurePin = () => {
+    section.style.setProperty('--pin-top', `${(pin.getBoundingClientRect().top + window.scrollY + jitter()).toFixed(2)}px`);
+  };
+  if (cssFill) {
+    section.classList.add('works--css');
+    measurePin();
+    // Верх секции сдвигается, когда выше меняется высота (шрифты, картинки): пересчитываем
+    remeasureTasks.push(measurePin);
+  }
+
   let frame = null;
   let headerHeight = header ? header.offsetHeight : 0; // читаем один раз, обновляем при resize
 
@@ -651,7 +696,7 @@ document.querySelectorAll('[data-works]').forEach((section) => {
     if (reduceMotion) p = p >= 0.5 ? 1 : 0; // без плавной заливки, сразу белый
     const eased = 1 - (1 - p) * (1 - p); // в начале быстрее, к концу замедляется
 
-    section.style.setProperty('--f', eased.toFixed(4));
+    if (!cssFill) section.style.setProperty('--f', eased.toFixed(4));
 
     // Работы и кнопка появляются, когда заливка закончилась (с запасом, чтобы не мигало)
     if (p >= 0.98) section.classList.add('is-in');
@@ -688,7 +733,7 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 (() => {
   if (!/[?&]v=/.test(window.location.search)) return;
   const tag = document.createElement('div');
-  tag.textContent = `build: css-scroll · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
+  tag.textContent = `build: css-scroll-2 · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
   tag.setAttribute('aria-hidden', 'true');
   tag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:200;padding:3px 7px;border-radius:4px;background:rgba(128,128,128,.55);color:#fff;font:10px/1.2 system-ui,sans-serif;pointer-events:none';
   document.body.appendChild(tag);

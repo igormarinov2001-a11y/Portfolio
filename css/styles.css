@@ -907,6 +907,25 @@ html.is-loading .loader {
   will-change: transform;
 }
 
+/* Режим scroll-анимации (класс works--css ставит js/main.js): колонки заливаются в браузере по
+   скроллу, на видеокарте, без скрипта на каждом кадре. Кривая та же, что была у скрипта
+   (быстро в начале, к концу медленнее). --pin-top считает js/main.js. */
+.works--css .works__fill span {
+  transform: none;
+  animation: works-fill 1s cubic-bezier(0.5, 1, 0.89, 1) both;
+  animation-timeline: scroll(root);
+  animation-range: var(--pin-top, 0px) calc(var(--pin-top, 0px) + var(--fill-distance));
+}
+
+@keyframes works-fill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 .works__fill span:nth-child(1) { left: 0; }
 .works__fill span:nth-child(2) { left: 25%; }
 .works__fill span:nth-child(3) { left: 50%; }
