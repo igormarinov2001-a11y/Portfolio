@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>The Northlane — Agency</title>
   <meta name="description" content="Senior designers. Fixed process. Pixel-perfect handoff. Brand, product, and web for teams that can't afford average.">
-  <link rel="stylesheet" href="css/styles.css?v=20261006-2101">
+  <link rel="stylesheet" href="css/styles.css?v=20261006-2107">
   <!-- Лоадер показывается только если работает JavaScript; аварийный таймер на случай сбоя -->
   <script>
     document.documentElement.classList.add('is-loading');
@@ -113,6 +113,7 @@
     <!-- Градиентный блок: выглядывает снизу первого экрана, при скролле растёт на весь экран -->
     <section class="reveal" data-reveal aria-hidden="true">
       <div class="reveal__media">
+        <div class="reveal__exit">
         <div class="reveal__layer">
           <picture>
             <!-- на телефоне — вертикальный градиент (макет 393×560, экспорт 3x) -->
@@ -120,6 +121,7 @@
             <img src="images/gradient.webp" width="2000" height="1125" alt="">
           </picture>
           <canvas class="reveal__canvas"></canvas>
+        </div>
         </div>
       </div>
       <span class="reveal__probe"></span>
@@ -193,6 +195,6 @@
     </section>
   </main>
 
-  <script src="js/main.js?v=20261006-2101" defer></script>
+  <script src="js/main.js?v=20261006-2107" defer></script>
 </body>
 </html>

@@ -374,6 +374,13 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   let endHeight = 0; // высота окна градиента, когда он раскрылся полностью (--h1)
   let headerHeight = 0; // высота шапки (читаем один раз: чтение на каждом кадре заставляло браузер пересчитывать вёрстку)
 
+  // Если браузер умеет scroll-анимации (animation-timeline), раскрытие и уход градиента идут на
+  // стороне браузера (CSS, класс reveal--css), а скрипт только считает стартовые числа и
+  // переключает шапку. Иначе (старые браузеры) всё считает скрипт на каждом кадре.
+  // ?nocss=1 в адресе принудительно включает скриптовую версию (для сравнения).
+  const cssMode = !/[?&]nocss\b/.test(window.location.search) && window.CSS && CSS.supports('animation-timeline: scroll()');
+  if (cssMode) reveal.classList.add('reveal--css');
+
   const measure = () => {
     distance = reveal.offsetHeight || 1;
     extra = Math.max(0, hero.offsetHeight - viewportHeight());
@@ -386,6 +393,14 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
     startWidth = probe ? probe.offsetWidth : window.innerWidth * 0.32;
     startHeight = probe ? probe.offsetHeight : viewportHeight() * 0.2;
     endHeight = probeEnd ? probeEnd.offsetHeight : viewportHeight();
+    if (cssMode) {
+      const screenW = document.documentElement.clientWidth;
+      reveal.style.setProperty('--x0', `${((screenW - startWidth) / 2).toFixed(2)}px`);
+      reveal.style.setProperty('--y0', `${start.toFixed(2)}px`);
+      reveal.style.setProperty('--sx0', (startWidth / screenW).toFixed(4));
+      reveal.style.setProperty('--sy0', (endHeight ? startHeight / endHeight : 0.2).toFixed(4));
+      reveal.style.setProperty('--extra', `${extra}px`);
+    }
   };
 
   const render = () => {
@@ -398,7 +413,7 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
     const boxH = startHeight + (endHeight - startHeight) * current;
     const scaleX = boxW / screenW;
     const scaleY = endHeight ? boxH / endHeight : 1;
-    layer.style.transform = `translate3d(${((screenW - boxW) / 2).toFixed(2)}px, ${y.toFixed(2)}px, 0) scale(${scaleX.toFixed(4)}, ${scaleY.toFixed(4)})`;
+    if (!cssMode) layer.style.transform = `translate3d(${((screenW - boxW) / 2).toFixed(2)}px, ${y.toFixed(2)}px, 0) scale(${scaleX.toFixed(4)}, ${scaleY.toFixed(4)})`;
     // Пока градиент под шапкой, инверсию текста шапки выключаем (на градиенте она даёт грязные цвета)
     if (header) {
       const onMedia = y < headerHeight && y + boxH > 0;
@@ -438,6 +453,12 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
 
   const update = () => {
     target = progress();
+    if (cssMode) {
+      // Само раскрытие делает CSS; здесь только состояние для шапки и холста
+      current = target;
+      render();
+      return;
+    }
     render();
     if (!frame) frame = requestAnimationFrame(tick);
   };
@@ -667,7 +688,7 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 (() => {
   if (!/[?&]v=/.test(window.location.search)) return;
   const tag = document.createElement('div');
-  tag.textContent = /[?&]nogl\b/.test(window.location.search) ? 'build: menu-fix · nogl' : 'build: menu-fix';
+  tag.textContent = `build: css-scroll · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
   tag.setAttribute('aria-hidden', 'true');
   tag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:200;padding:3px 7px;border-radius:4px;background:rgba(128,128,128,.55);color:#fff;font:10px/1.2 system-ui,sans-serif;pointer-events:none';
   document.body.appendChild(tag);

@@ -632,6 +632,7 @@ html.is-loading .loader {
   --reveal-distance: calc(20 * var(--vh)); /* сколько нужно проскроллить, чтобы градиент закрыл экран */
   --peek: 0.103;          /* доля высоты экрана, на которую блок выглядывает в начале (читает js/main.js) */
   --h1: var(--reveal-h);  /* высота в конце раскрытия */
+  --reveal-timing: linear; /* кривая раскрытия в режиме scroll-анимации (см. .reveal--css) */
   --reveal-smooth: 0.4;   /* сглаживание: доля пути за кадр (меньше = плавнее); читает js/main.js */
   --reveal-ease: 0;       /* мягкий старт и конец раскрытия, 0…1 (0 = линейно) */
   position: relative;
@@ -650,12 +651,20 @@ html.is-loading .loader {
    вызывает перерисовок и пересчёта вёрстки (как на референсе, там тоже scale у холста).
    Положение и масштаб на каждом кадре ставит js/main.js; градиент мягкий, поэтому
    растяжение по осям незаметно. */
-.reveal__layer {
+.reveal__exit {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: var(--h1);
+}
+
+.reveal__layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   transform-origin: 0 0;
   transform: translate3d(0, calc(100 * var(--vh)), 0); /* запасное: пока скрипт не загрузился, градиента не видно */
   will-change: transform;
@@ -686,6 +695,42 @@ html.is-loading .loader {
 
 .reveal.has-shader .reveal__media img {
   display: none;
+}
+
+/* Режим scroll-анимации (класс reveal--css ставит js/main.js, если браузер умеет
+   animation-timeline: scroll(), например Safari 26+ и Chrome): раскрытие и уход градиента
+   привязаны к скроллу прямо в браузере и идут на видеокарте, без JavaScript на каждом кадре.
+   Так на iPhone нет рассинхрона со скроллом, из-за которого JS-версия дёргалась.
+   Стартовое положение и размер (--x0, --y0, --sx0, --sy0) и --extra считает js/main.js. */
+.reveal--css .reveal__layer {
+  transform: none;
+  animation: reveal-open 1s var(--reveal-timing) both;
+  animation-timeline: scroll(root);
+  animation-range: var(--extra, 0px) calc(var(--extra, 0px) + var(--reveal-distance));
+}
+
+.reveal--css .reveal__exit {
+  animation: reveal-exit 1s linear both;
+  animation-timeline: scroll(root);
+  animation-range: calc(var(--extra, 0px) + var(--reveal-distance)) calc(var(--extra, 0px) + var(--reveal-distance) + var(--h1));
+}
+
+@keyframes reveal-open {
+  from {
+    transform: translate3d(var(--x0, 0px), var(--y0, 100vh), 0) scale(var(--sx0, 0.3), var(--sy0, 0.2));
+  }
+  to {
+    transform: translate3d(0, 0, 0) scale(1, 1);
+  }
+}
+
+@keyframes reveal-exit {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, calc(-1 * var(--h1)), 0);
+  }
 }
 
 /* Невидимый замер: js/main.js читает отсюда начальную высоту окна градиента */
@@ -1312,6 +1357,7 @@ html.is-loading .loader {
     --reveal-distance: calc(55 * var(--vh)); /* раскрытие медленнее: длиннее путь скролла */
     --reveal-smooth: 0.12;
     --reveal-ease: 1;
+    --reveal-timing: cubic-bezier(0.37, 0, 0.63, 1); /* мягкий старт и конец, как smoothstep */
   }
 
   /* About */
