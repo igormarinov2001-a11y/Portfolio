@@ -447,6 +447,8 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   const picture = media.querySelector('img');
   let shader = null;
   const startShader = () => {
+    // Для проверки: ?nogl=1 в адресе отключает живой градиент (остаётся обычная картинка)
+    if (/[?&]nogl\b/.test(window.location.search)) return;
     shader = createGradient(canvas, picture, !reduceMotion, () => ({ width: document.documentElement.clientWidth, height: endHeight || viewportHeight() }));
     if (!shader) return;
     reveal.classList.add('has-shader');
@@ -665,7 +667,7 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 (() => {
   if (!/[?&]v=/.test(window.location.search)) return;
   const tag = document.createElement('div');
-  tag.textContent = 'build: menu-fix';
+  tag.textContent = /[?&]nogl\b/.test(window.location.search) ? 'build: menu-fix · nogl' : 'build: menu-fix';
   tag.setAttribute('aria-hidden', 'true');
   tag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:200;padding:3px 7px;border-radius:4px;background:rgba(128,128,128,.55);color:#fff;font:10px/1.2 system-ui,sans-serif;pointer-events:none';
   document.body.appendChild(tag);
