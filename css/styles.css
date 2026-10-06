@@ -1181,6 +1181,36 @@ html.is-loading .loader {
     letter-spacing: 0;
   }
 
+  /* Открытие меню: пункты по очереди выезжают снизу из-под своей строки (строка обрезает),
+     каждый следующий на 0.07с позже. Закрытие быстрое, все сразу. */
+  .nav__list li {
+    overflow: hidden;
+  }
+
+  .nav__list a {
+    transform: translateY(105%);
+    transition: transform 0.25s ease;
+  }
+
+  .nav__list li:nth-child(1) { --i: 0; }
+  .nav__list li:nth-child(2) { --i: 1; }
+  .nav__list li:nth-child(3) { --i: 2; }
+  .nav__list li:nth-child(4) { --i: 3; }
+  .nav__list li:nth-child(5) { --i: 4; }
+
+  html.is-menu-open .nav__list a {
+    transform: none;
+    transition: transform 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) calc(0.12s + var(--i, 0) * 0.07s);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav__list a,
+    html.is-menu-open .nav__list a {
+      transform: none;
+      transition: none;
+    }
+  }
+
   .nav__list .serif {
     font-size: 0.9em;
   }
@@ -1279,7 +1309,7 @@ html.is-loading .loader {
 
   /* Лоадер */
   .loader {
-    padding: 0 calc(10 * var(--u)) calc(3 * var(--u));
+    padding: 0 calc(16 * var(--u)) calc(3 * var(--u));
   }
 
   .loader__row {
