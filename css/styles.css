@@ -1340,11 +1340,13 @@ html.is-loading .loader {
   .works__fill span:nth-child(3),
   .works__fill span:nth-child(4) { display: none; }
 
+  /* Линии на белом: 1px (2px на телефоне казались толстыми), чуть темнее, чтобы не пропали */
   .works__lines span {
-    width: calc(2 * var(--u));
-    background: rgb(11 11 11 / 0.0615); /* на белом выходит #f0f0f0, на тёмном не видно */
+    width: 1px;
+    background: rgb(11 11 11 / 0.09); /* на белом около #eaeaea, на тёмном не видно */
   }
 
-  .works__lines span:nth-child(1) { left: calc(9 * var(--u)); }
-  .works__lines span:nth-child(3) { left: auto; right: calc(9 * var(--u)); }
+  .works__lines span:nth-child(1) { left: calc(9.5 * var(--u)); }
+  .works__lines span:nth-child(2) { left: calc(50% - 0.5px); }
+  .works__lines span:nth-child(3) { left: auto; right: calc(9.5 * var(--u)); }
 }
