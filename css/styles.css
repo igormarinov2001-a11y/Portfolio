@@ -62,6 +62,14 @@
      версии записаны как calc(N * var(--u)), где N — число из Figma. */
   --u: calc(100vw / 1920);
 
+  /* Единица высоты экрана: 1% высоты. Запасное значение — svh; js/main.js подставляет реальную
+     высоту окна (innerHeight), чтобы вёрстка и скрипты считали от одного и того же числа
+     (в мобильных браузерах и встроенных окнах svh бывает другим). */
+  --vh: 1svh;
+
+  /* Отступ сверху под системные элементы (вырез, статус-бар): на сайте обычно 0 */
+  --top-inset: env(safe-area-inset-top, 0px);
+
   /* Отступы от края экрана (в макете 25px на ширине 1920) */
   --gutter: calc(25 * var(--u));
 }
@@ -491,7 +499,7 @@ html.is-loading .loader {
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100svh;
+  min-height: calc(100 * var(--vh));
   padding: calc(4 * var(--u)) var(--gutter) 0; /* 4px сверху — подгонка под макет */
 }
 
@@ -608,10 +616,10 @@ html.is-loading .loader {
 
 .reveal {
   --p: 0;
-  --y: 89.7svh;           /* запасное значение, если скрипт не загрузился: блок выглядывает снизу */
+  --y: calc(89.7 * var(--vh));           /* запасное значение, если скрипт не загрузился: блок выглядывает снизу */
   --w0: 32vw;             /* ширина в начале */
   --h0: 18vw;             /* высота в начале (16:9 от ширины) */
-  --reveal-distance: 20svh; /* сколько нужно проскроллить, чтобы градиент закрыл экран */
+  --reveal-distance: calc(20 * var(--vh)); /* сколько нужно проскроллить, чтобы градиент закрыл экран */
   --peek: 0.103;          /* доля высоты экрана, на которую блок выглядывает в начале (читает js/main.js) */
   position: relative;
   height: var(--reveal-distance);
@@ -619,24 +627,52 @@ html.is-loading .loader {
 
 .reveal__media {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  inset: 0;
   z-index: 1;
-  width: calc(var(--w0) + (100% - var(--w0)) * var(--p));
-  height: calc(var(--h0) + (100svh - var(--h0)) * var(--p));
-  margin: 0 auto;
-  overflow: hidden;
   pointer-events: none;
-  transform: translate3d(0, var(--y), 0);
-  will-change: transform;
+  /* Окно градиента — прямоугольник: сверху --y, шириной от --w0 до всего экрана и высотой от --h0
+     до всего экрана (по прогрессу --p). Сам градиент всегда на весь экран и не масштабируется
+     (его не перерисовывают при росте окна), окно только «открывает» его через clip-path.
+     Отступы окна от краёв экрана (--ct сверху, --cb снизу, --cs по бокам) считает js/main.js. */
+  clip-path: inset(var(--ct, 0px) var(--cs, 0px) var(--cb, 0px) var(--cs, 0px));
 }
 
-.reveal__media img {
+.reveal__media img,
+.reveal__canvas {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
   height: 100%;
+}
+
+.reveal__media img {
   object-fit: cover;
+}
+
+/* Живой градиент: WebGL-шейдер на маленьком canvas (js/main.js, createGradient). Пока он не
+   запустился или если WebGL нет, показывается картинка (она же запасной вариант). */
+.reveal__canvas {
+  display: none;
+}
+
+.reveal.has-shader .reveal__canvas {
+  display: block;
+}
+
+.reveal.has-shader .reveal__media img {
+  display: none;
+}
+
+/* Невидимый замер: js/main.js читает отсюда начальную высоту окна градиента */
+.reveal__probe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--w0);
+  height: var(--h0);
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* Дрейф картинки. Классы ставит js/main.js:
@@ -741,7 +777,7 @@ html.is-loading .loader {
    ========================================================================== */
 
 .works {
-  --fill-distance: 60svh; /* сколько нужно проскроллить, чтобы колонки залились белым */
+  --fill-distance: calc(60 * var(--vh)); /* сколько нужно проскроллить, чтобы колонки залились белым */
   position: relative;
   z-index: 1;
   isolation: isolate;
@@ -752,13 +788,13 @@ html.is-loading .loader {
    заливаются белым; 3) когда заливка закончилась, появляются подпись, работы и кнопка. */
 .works__pin {
   position: relative;
-  height: calc(100svh + var(--fill-distance));
+  height: calc(100 * var(--vh) + var(--fill-distance));
 }
 
 .works__stage {
   position: sticky;
   top: 0;
-  height: 100svh;
+  height: calc(100 * var(--vh));
   overflow: hidden;
 }
 
@@ -989,8 +1025,8 @@ html.is-loading .loader {
   /* Шапка: логотип слева, «Book a call» текстом и бургер справа */
   .header {
     grid-template-columns: 1fr auto;
-    min-height: calc(56 * var(--u));
-    padding-top: calc(14 * var(--u));
+    min-height: calc(56 * var(--u) + var(--top-inset));
+    padding-top: calc(14 * var(--u) + var(--top-inset));
     padding-bottom: calc(14 * var(--u));
   }
 
@@ -999,7 +1035,7 @@ html.is-loading .loader {
   }
 
   .header__cta {
-    top: calc(18 * var(--u));
+    top: calc(18 * var(--u) + var(--top-inset));
     right: calc(66 * var(--u));
     gap: calc(10 * var(--u));
     height: calc(20 * var(--u));
@@ -1071,7 +1107,7 @@ html.is-loading .loader {
     z-index: -1;
     display: flex;
     align-items: flex-end;
-    padding: calc(96 * var(--u)) var(--gutter) calc(48 * var(--u));
+    padding: calc(96 * var(--u) + var(--top-inset)) var(--gutter) calc(48 * var(--u));
     background: var(--color-bg);
     visibility: hidden;
     opacity: 0;
@@ -1107,7 +1143,7 @@ html.is-loading .loader {
   /* Первый экран */
   .hero {
     justify-content: center;
-    padding: calc(4 * var(--u)) var(--gutter) calc(52 * var(--u));
+    padding: calc(4 * var(--u) + var(--top-inset)) var(--gutter) calc(52 * var(--u));
   }
 
   .hero__the {
@@ -1149,7 +1185,7 @@ html.is-loading .loader {
 
   /* About */
   .about {
-    padding: calc(209 * var(--u)) var(--gutter) calc(80 * var(--u));
+    padding: calc(100 * var(--u)) var(--gutter) calc(80 * var(--u));
   }
 
   .about__label {

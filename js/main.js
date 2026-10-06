@@ -1,3 +1,13 @@
+// Высота экрана для вёрстки: --vh = 1% реальной высоты окна (innerHeight). Так CSS и скрипты
+// считают от одного числа (в мобильных браузерах и встроенных окнах 100svh бывает другим).
+(() => {
+  const root = document.documentElement;
+  const set = () => root.style.setProperty('--vh', `${window.innerHeight / 100}px`);
+  set();
+  window.addEventListener('resize', set);
+})();
+
+
 // Лоадер. Показывает реальный прогресс загрузки (шрифты и картинки страницы), но не быстрее,
 // чем за MIN_MS, чтобы счётчик успел «пробежать». На 100% чуть держит; надписи ныряют под линию,
 // линия сворачивается слева направо, и пустой экран уезжает вверх.
@@ -147,6 +157,127 @@ document.querySelectorAll('[data-slideshow]').forEach((box) => {
 });
 
 
+// Живой градиент. Тот же приём, что на референсе: не картинка, а небольшой WebGL-холст,
+// на котором шейдер каждую секунду «переливает» цвета. Холст рисуется в 3 раза меньше экрана
+// (градиент мягкий, это незаметно) и растягивается браузером, поэтому он лёгкий даже на телефоне.
+// Цвета взяты из gradient.webp. Если WebGL недоступен, остаётся картинка.
+const createGradient = (canvas, animated) => {
+  const RES = 1 / 3; // размер холста относительно экрана
+  const SPEED = 0.18; // скорость переливания (больше = быстрее)
+  const gl = canvas.getContext('webgl', { antialias: false, alpha: false, depth: false, stencil: false, powerPreference: 'low-power' });
+  if (!gl) return null;
+
+  const vertex = 'attribute vec2 a;void main(){gl_Position=vec4(a,0.,1.);}';
+  const fragment = `
+    #ifdef GL_FRAGMENT_PRECISION_HIGH
+    precision highp float;
+    #else
+    precision mediump float;
+    #endif
+    uniform vec2 u_res;
+    uniform float u_time;
+
+    // Палитра из gradient.webp: от почти чёрного через индиго и фиолетовый к сиреневому и голубому
+    vec3 palette(float t) {
+      vec3 c0 = vec3(0.027, 0.012, 0.106);
+      vec3 c1 = vec3(0.122, 0.078, 0.369);
+      vec3 c2 = vec3(0.439, 0.071, 0.925);
+      vec3 c3 = vec3(0.565, 0.318, 0.902);
+      vec3 c4 = vec3(0.388, 0.514, 0.988);
+      vec3 c5 = vec3(0.506, 0.569, 0.988);
+      t = clamp(t, 0., 1.) * 5.;
+      vec3 c = mix(c0, c1, smoothstep(0., 1., t));
+      c = mix(c, c2, smoothstep(1., 2., t));
+      c = mix(c, c3, smoothstep(2., 3., t));
+      c = mix(c, c4, smoothstep(3., 4., t));
+      c = mix(c, c5, smoothstep(4., 5., t));
+      return c;
+    }
+
+    void main() {
+      vec2 p = (gl_FragCoord.xy * 2. - u_res) / min(u_res.x, u_res.y);
+      float t = u_time;
+      // «Жидкость»: плоскость несколько раз плавно изгибается синусами, их фаза плывёт со временем.
+      // Дальше по искривлённым координатам считается мягкая волна, и она красится палитрой.
+      vec2 q = p * 0.7;
+      q += 0.55 * vec2(sin(q.y * 1.3 + t * 1.0), cos(q.x * 1.1 - t * 0.8));
+      q += 0.35 * vec2(sin(q.y * 2.1 - t * 0.7 + 1.7), cos(q.x * 1.9 + t * 0.9 + 0.6));
+      q += 0.12 * vec2(sin(q.y * 3.3 + t * 0.6 + 3.1), cos(q.x * 3.0 - t * 0.5));
+      float w = q.x * 0.9 + q.y * 0.7;
+      float v = 0.5 + 0.5 * sin(w * 1.6 + 1.2 * sin(q.x * 1.3 - q.y * 1.1 + t * 0.5));
+      gl_FragColor = vec4(palette(v), 1.);
+    }`;
+
+  const compile = (type, source) => {
+    const shader = gl.createShader(type);
+    gl.shaderSource(shader, source);
+    gl.compileShader(shader);
+    return gl.getShaderParameter(shader, gl.COMPILE_STATUS) ? shader : null;
+  };
+  const vs = compile(gl.VERTEX_SHADER, vertex);
+  const fs = compile(gl.FRAGMENT_SHADER, fragment);
+  if (!vs || !fs) return null;
+  const program = gl.createProgram();
+  gl.attachShader(program, vs);
+  gl.attachShader(program, fs);
+  gl.linkProgram(program);
+  if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return null;
+  gl.useProgram(program);
+
+  const buffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  const position = gl.getAttribLocation(program, 'a');
+  gl.enableVertexAttribArray(position);
+  gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
+  const resLoc = gl.getUniformLocation(program, 'u_res');
+  const timeLoc = gl.getUniformLocation(program, 'u_time');
+
+  const startedAt = performance.now();
+  let active = false;
+  let frame = 0;
+
+  const draw = () => {
+    gl.uniform1f(timeLoc, ((performance.now() - startedAt) / 1000) * SPEED);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  };
+
+  const resize = () => {
+    const w = Math.max(2, Math.round(document.documentElement.clientWidth * RES));
+    const h = Math.max(2, Math.round(window.innerHeight * RES));
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+      gl.viewport(0, 0, w, h);
+      gl.uniform2f(resLoc, w, h);
+      draw();
+    }
+  };
+
+  const loop = () => {
+    frame = 0;
+    if (!active || document.hidden) return;
+    draw();
+    frame = requestAnimationFrame(loop);
+  };
+
+  resize();
+  draw();
+
+  return {
+    resize,
+    // Крутим холст только пока градиент виден на экране
+    setActive(on) {
+      active = on;
+      if (on && animated && !frame && !document.hidden) frame = requestAnimationFrame(loop);
+    },
+    wake() {
+      if (active && animated && !frame && !document.hidden) frame = requestAnimationFrame(loop);
+    },
+  };
+};
+
+
 // Градиент, накрывающий хиро. Блок закреплён на экране; пока скролл проходит
 // «reveal-distance» (высота пустого блока .reveal), он поднимается снизу и растёт до полного
 // экрана, закрывая хиро, а дальше уезжает вверх вместе со страницей и стыкуется с About.
@@ -155,6 +286,7 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   const hero = document.querySelector('.hero');
   const header = document.querySelector('.header');
   const media = reveal.querySelector('.reveal__media');
+  const probe = reveal.querySelector('.reveal__probe');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const SMOOTHING = reduceMotion ? 1 : 0.4; // 1 = без сглаживания, меньше = плавнее (но и мягче)
   let peek = 0.103; // доля высоты экрана, на которую блок выглядывает в начале (берётся из CSS: --peek)
@@ -165,12 +297,16 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   let distance = 1; // сколько скроллить до полного раскрытия
   let extra = 0; // на сколько хиро выше экрана (на маленьких экранах)
   let start = 0; // положение верха блока в самом начале
+  let startWidth = 0; // ширина окна градиента в самом начале
+  let startHeight = 0; // высота окна градиента в самом начале
 
   const measure = () => {
     distance = reveal.offsetHeight || 1;
     extra = Math.max(0, hero.offsetHeight - window.innerHeight);
     peek = parseFloat(getComputedStyle(reveal).getPropertyValue('--peek')) || 0.103;
     start = window.innerHeight * (1 - peek);
+    startWidth = probe ? probe.offsetWidth : window.innerWidth * 0.32;
+    startHeight = probe ? probe.offsetHeight : window.innerHeight * 0.2;
   };
 
   const render = () => {
@@ -178,17 +314,26 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
     const y = (1 - current) * start + Math.max(0, -sigma) - Math.max(0, sigma - distance);
     reveal.style.setProperty('--p', current.toFixed(4));
     reveal.style.setProperty('--y', `${y.toFixed(1)}px`);
+    // Окно градиента: прямоугольник [верх y; ширина и высота растут от стартовых до экрана]
+    const screenW = document.documentElement.clientWidth;
+    const screenH = window.innerHeight;
+    const boxW = startWidth + (screenW - startWidth) * current;
+    const boxH = startHeight + (screenH - startHeight) * current;
+    media.style.setProperty('--ct', `${Math.max(0, y).toFixed(1)}px`);
+    media.style.setProperty('--cb', `${Math.max(0, screenH - y - boxH).toFixed(1)}px`);
+    media.style.setProperty('--cs', `${((screenW - boxW) / 2).toFixed(1)}px`);
     // Пока градиент под шапкой, инверсию текста шапки выключаем (на градиенте она даёт грязные цвета)
     if (header) {
-      const box = media.getBoundingClientRect();
-      const onMedia = box.top < header.offsetHeight && box.bottom > 0;
+      const onMedia = y < header.offsetHeight && y + boxH > 0;
       header.classList.toggle('is-on-media', onMedia);
       document.documentElement.classList.toggle('is-media-under-header', onMedia); // для кнопки шапки, она вне <header>
     }
     // Дрейф градиента запускается, когда он впервые раскрылся на весь экран, и дальше идёт
     // всё время, пока блок виден (при скролле не прерывается и не сбрасывается)
     if (current > 0.995) reveal.classList.add('is-armed');
-    reveal.classList.toggle('is-live', y > -window.innerHeight);
+    const live = y > -window.innerHeight;
+    reveal.classList.toggle('is-live', live);
+    if (shader) shader.setActive(live);
   };
 
   const tick = () => {
@@ -204,6 +349,18 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
     if (!frame) frame = requestAnimationFrame(tick);
   };
 
+  // Живой градиент (WebGL); без него остаётся картинка
+  const canvas = reveal.querySelector('.reveal__canvas');
+  const shader = canvas ? createGradient(canvas, !reduceMotion) : null;
+  if (shader) {
+    reveal.classList.add('has-shader');
+    canvas.addEventListener('webglcontextlost', (e) => {
+      e.preventDefault();
+      reveal.classList.remove('has-shader');
+    });
+    document.addEventListener('visibilitychange', () => shader.wake());
+  }
+
   measure();
   target = Math.min(1, Math.max(0, (window.scrollY - extra) / distance));
   current = target; // при перезагрузке страницы посреди скролла сразу ставим нужный размер
@@ -212,6 +369,7 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   window.addEventListener('scroll', update, { passive: true });
   window.addEventListener('resize', () => {
     measure();
+    if (shader) shader.resize();
     update();
   });
 });
