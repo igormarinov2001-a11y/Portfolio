@@ -1323,7 +1323,7 @@ html.is-loading .loader {
   .works__grid {
     grid-template-columns: 1fr;
     gap: calc(3 * var(--u));
-    padding: 0 calc(4 * var(--u));
+    padding: 0 calc(8 * var(--u));
   }
 
   /* На телефоне порядок работ другой: 3 и 4 меняются местами */
