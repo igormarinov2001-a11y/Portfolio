@@ -1116,6 +1116,26 @@ html.is-loading .loader {
   display: none;
 }
 
+/* Цвет текста шапки на белой секции при открытии/закрытии меню (см. раздел «Телефон и планшет») */
+@keyframes header-text-open {
+  from,
+  to {
+    color: var(--color-bg);
+  }
+}
+
+@keyframes header-text-close {
+  0% {
+    color: #fff;
+  }
+  21% {
+    color: var(--color-bg);
+  }
+  100% {
+    color: var(--color-bg);
+  }
+}
+
 @media (max-width: 900px) {
   :root {
     --u: clamp(0.9px, calc(100vw / 393), 1.1px);
@@ -1262,6 +1282,20 @@ html.is-loading .loader {
   html.is-menu-closing .header,
   html.is-menu-closing .header__cta {
     mix-blend-mode: normal;
+  }
+
+  /* На белой секции без инверсии белый текст шапки пропадал бы: пока шторка меню проезжает по
+     шапке (первые ~0.15с), текст остаётся как был, а дальше, пока инверсия выключена, он тёмный.
+     После этого включается инверсия, и текст остаётся тёмным без скачка. Только на белой секции
+     (html.is-over-works). Открытие: наоборот, сначала тёмный, потом белый на синем. */
+  html.is-over-works.is-menu-open .header,
+  html.is-over-works.is-menu-open .header__cta {
+    animation: header-text-open 0.2s step-end;
+  }
+
+  html.is-over-works.is-menu-closing:not(.is-menu-open) .header,
+  html.is-over-works.is-menu-closing:not(.is-menu-open) .header__cta {
+    animation: header-text-close 0.7s step-end;
   }
 
   .nav__list {
