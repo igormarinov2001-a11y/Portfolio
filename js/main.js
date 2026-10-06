@@ -1,5 +1,6 @@
 // Лоадер. Показывает реальный прогресс загрузки (шрифты и картинки страницы), но не быстрее,
-// чем за MIN_MS, чтобы счётчик успел «пробежать». Когда дошёл до 100%, чуть держит и уезжает вверх.
+// чем за MIN_MS, чтобы счётчик успел «пробежать». На 100% чуть держит; надписи ныряют под линию,
+// линия сворачивается слева направо, и пустой экран уезжает вверх.
 (() => {
   const loader = document.querySelector('[data-loader]');
   const root = document.documentElement;
@@ -9,7 +10,8 @@
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const MIN_MS = reduceMotion ? 600 : 1800; // минимум, за сколько счётчик дойдёт до 100%
   const HOLD_MS = 250; // пауза на 100% перед уходом
-  const EXIT_MS = reduceMotion ? 400 : 900; // сколько длится уход (как в CSS)
+  const DIVE_MS = reduceMotion ? 0 : 800; // надписи ныряют под линию, линия сворачивается (как в CSS)
+  const EXIT_MS = reduceMotion ? 400 : 900; // потом экран уезжает вверх (как в CSS)
 
   // Что считаем «загруженным»: шрифты + все картинки на странице
   const images = [...document.images];
@@ -33,11 +35,14 @@
     if (finished) return;
     finished = true;
     setTimeout(() => {
-      loader.classList.add('is-done');
+      loader.classList.add('is-diving'); // надписи ныряют под линию, линия сворачивается
       setTimeout(() => {
-        root.classList.remove('is-loading'); // лоадер скрыт, скролл снова работает
-        loader.remove();
-      }, EXIT_MS);
+        loader.classList.add('is-done'); // экран уезжает вверх
+        setTimeout(() => {
+          root.classList.remove('is-loading'); // лоадер скрыт, скролл снова работает
+          loader.remove();
+        }, EXIT_MS);
+      }, DIVE_MS);
     }, HOLD_MS);
   };
 

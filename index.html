@@ -17,10 +17,13 @@
   <!-- Лоадер: счётчик и тонкая линия прогресса, пока грузятся шрифты и картинки -->
   <div class="loader" data-loader role="status" aria-label="Loading">
     <div class="loader__inner">
-      <div class="loader__row">
-        <span class="loader__est">Est 2022</span>
-        <span class="loader__logo"><span class="serif">The</span> Northlane</span>
-        <span class="loader__percent" data-loader-percent aria-hidden="true">0%</span>
+      <!-- Окно-обрезка: нижняя граница совпадает с линией прогресса, надписи «ныряют» под неё -->
+      <div class="loader__clip">
+        <div class="loader__row">
+          <span class="loader__est">Est 2022</span>
+          <span class="loader__logo"><span class="serif">The</span> Northlane</span>
+          <span class="loader__percent" data-loader-percent aria-hidden="true">0%</span>
+        </div>
       </div>
       <div class="loader__bar" aria-hidden="true"><span class="loader__fill" data-loader-fill></span></div>
     </div>
