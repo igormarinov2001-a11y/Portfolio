@@ -18,9 +18,10 @@
   font-display: swap;
 }
 
-/* ВРЕМЕННО: пока нет файлов Nyght Serif, курсив рисуется Playfair Display.
-   Когда файл появится в папке fonts/ — раскомментировать блок ниже
-   (имя файла поправить под своё) и удалить Playfair из --font-serif. */
+/* ВРЕМЕННО: пока нет файлов Nyght Serif, курсив рисуется Libre Caslon Text (бесплатный, лицензия
+   OFL): из бесплатных он ближе всего к Nyght по весу и контрасту. Когда файл Nyght появится в
+   папке fonts/ — раскомментировать блок ниже (имя файла поправить под своё) и убрать
+   Libre Caslon из --font-serif. */
 /*
 @font-face {
   font-family: "Nyght Serif";
@@ -31,8 +32,8 @@
 */
 
 @font-face {
-  font-family: "Playfair Display";
-  src: url("../fonts/playfair-display-400-italic.woff2") format("woff2");
+  font-family: "Libre Caslon Text";
+  src: url("../fonts/libre-caslon-text-400-italic.woff2") format("woff2");
   font-weight: 400;
   font-style: italic;
   font-display: swap;
@@ -55,7 +56,7 @@
 
   /* Шрифты */
   --font-sans: "Uncut Sans", system-ui, sans-serif;
-  --font-serif: "Nyght Serif", "Playfair Display", Georgia, serif;
+  --font-serif: "Nyght Serif", "Libre Caslon Text", Georgia, serif;
 
   /* Масштаб макета: 1 «пиксель макета» = 1/1920 ширины окна.
      На экране 1920px это ровно 1px, на 1440px — 0.75px. Все размеры десктопной
@@ -142,6 +143,7 @@ img {
   font-family: var(--font-serif);
   font-style: italic;
   font-weight: 400;
+  letter-spacing: -0.02em; /* Libre Caslon шире Nyght Serif, чуть поджимаем */
 }
 
 
