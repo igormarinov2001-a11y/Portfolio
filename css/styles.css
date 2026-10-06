@@ -107,7 +107,11 @@ body {
   letter-spacing: 0.01em;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* clip, а не hidden: hidden делает <body> областью прокрутки, и в Safari на iPhone ломается
+     position: sticky (секция Works не закреплялась, и появлялся чёрный кусок). Старые браузеры
+     без clip берут hidden. */
   overflow-x: hidden;
+  overflow-x: clip;
 }
 
 a {
