@@ -350,19 +350,18 @@ html.is-loading .loader {
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   padding: calc(20 * var(--u)) var(--gutter);
-  color: var(--color-text);
-  transition: color 0.3s ease;
+  min-height: calc(79 * var(--u)); /* 20 + кнопка 39 + 20: высота шапки, как когда кнопка была внутри */
+  color: #fff;
+  /* Инверсия по пикселям: белый текст с режимом difference. Над тёмным фоном буквы белые,
+     над белым объектом (секция, картинка, крупные буквы) они становятся тёмными, и
+     инвертируется только та часть буквы, которая перекрывает светлое. Работает в обе стороны. */
+  mix-blend-mode: difference;
 }
 
-/* Когда шапка над белой секцией работ, текст становится тёмным, а кнопка чёрной
-   (класс ставит js/main.js). Заливки у шапки нет. */
-.header.is-on-light {
-  color: var(--color-bg);
-}
-
-.header.is-on-light .header__cta {
-  background: var(--color-bg);
-  color: var(--color-text);
+/* Над градиентом инверсия даёт грязные цвета, поэтому там шапка обычная белая
+   (класс ставит js/main.js, когда градиент заезжает под шапку) */
+.header.is-on-media {
+  mix-blend-mode: normal;
 }
 
 .logo {
@@ -391,8 +390,19 @@ html.is-loading .loader {
 }
 
 .header__cta {
-  justify-self: end;
+  position: fixed;
+  top: calc(20 * var(--u));
+  right: var(--gutter);
+  z-index: 3;
   transition: color 0.08s linear 0.12s, background-color 0.3s ease;
+}
+
+/* Когда заливка секции работ стала полностью белой, кнопка шапки тёмная (класс ставит
+   js/main.js). Переключение мгновенное, чтобы текст кнопки не терялся. */
+.header__cta.is-on-light {
+  background: var(--color-bg);
+  color: var(--color-text);
+  transition: none;
 }
 
 

@@ -136,6 +136,8 @@ document.querySelectorAll('[data-slideshow]').forEach((box) => {
 // --p (0…1) — насколько блок раскрыт, --y — его положение по вертикали.
 document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   const hero = document.querySelector('.hero');
+  const header = document.querySelector('.header');
+  const media = reveal.querySelector('.reveal__media');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const SMOOTHING = reduceMotion ? 1 : 0.4; // 1 = без сглаживания, меньше = плавнее (но и мягче)
   const PEEK = 0.103; // доля высоты экрана, на которую блок выглядывает в начале (как в CSS)
@@ -158,6 +160,11 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
     const y = (1 - current) * start + Math.max(0, -sigma) - Math.max(0, sigma - distance);
     reveal.style.setProperty('--p', current.toFixed(4));
     reveal.style.setProperty('--y', `${y.toFixed(1)}px`);
+    // Пока градиент под шапкой, инверсию текста шапки выключаем (на градиенте она даёт грязные цвета)
+    if (header) {
+      const box = media.getBoundingClientRect();
+      header.classList.toggle('is-on-media', box.top < header.offsetHeight && box.bottom > 0);
+    }
     // Дрейф градиента запускается, когда он впервые раскрылся на весь экран, и дальше идёт
     // всё время, пока блок виден (при скролле не прерывается и не сбрасывается)
     if (current > 0.995) reveal.classList.add('is-armed');
@@ -316,10 +323,11 @@ document.querySelectorAll('[data-marquee]').forEach((el) => {
 // скролите, четыре колонки (между линиями сетки) заливаются белым слева направо одновременно,
 // потом появляются подпись, работы и кнопка.
 // --f (0…1) — прогресс заливки; is-in — заливка закончилась, показываем контент.
-// Когда заливка стала полностью белой, шапка становится тёмной (is-on-light), чтобы не пропасть
-// на белом.
+// Когда заливка стала полностью белой, кнопка шапки становится тёмной (is-on-light), чтобы не
+// пропасть на белом (текст шапки инвертируется сам, см. mix-blend-mode в CSS).
 document.querySelectorAll('[data-works]').forEach((section) => {
   const header = document.querySelector('.header');
+  const cta = document.querySelector('.header__cta');
   const pin = section.querySelector('.works__pin');
   const stage = section.querySelector('.works__stage');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -342,10 +350,10 @@ document.querySelectorAll('[data-works]').forEach((section) => {
     if (p >= 0.98) section.classList.add('is-in');
     else if (p < 0.7) section.classList.remove('is-in');
 
-    if (header) {
-      const mid = header.offsetHeight / 2;
-      // Шапка меняет цвет только когда заливка полностью белая (то же условие, что и is-in)
-      header.classList.toggle('is-on-light', section.classList.contains('is-in') && section.getBoundingClientRect().bottom > mid);
+    if (cta) {
+      const mid = header ? header.offsetHeight / 2 : 40;
+      // Кнопка шапки темнеет, только когда заливка полностью белая (то же условие, что и is-in)
+      cta.classList.toggle('is-on-light', section.classList.contains('is-in') && section.getBoundingClientRect().bottom > mid);
     }
   };
 
