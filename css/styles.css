@@ -386,7 +386,7 @@ html.is-loading .loader {
 .nav__list a {
   font-size: max(13px, calc(16 * var(--u))); /* 16px в макете, но не меньше 13px */
   line-height: 1;
-  text-transform: uppercase;
+  text-transform: uppercase;  font-weight: 600;
 }
 
 .header__cta {
