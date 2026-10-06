@@ -1094,8 +1094,8 @@ html.is-loading .loader {
     mix-blend-mode: normal;
   }
 
-  html.is-over-works:not(.is-menu-open) .header:not(.is-on-media),
-  html.is-over-works:not(.is-menu-open):not(.is-media-under-header) .header__cta {
+  html.is-over-works:not(.is-menu-open):not(.is-menu-closing) .header:not(.is-on-media),
+  html.is-over-works:not(.is-menu-open):not(.is-menu-closing):not(.is-media-under-header) .header__cta {
     mix-blend-mode: difference;
   }
 
@@ -1191,8 +1191,12 @@ html.is-loading .loader {
     transform-origin: 50% 0; /* открытие: нижний край едет сверху вниз */
   }
 
+  /* Пока меню открыто и пока синяя шторка уходит при закрытии (is-menu-closing), инверсия шапки
+     выключена: иначе шторка смешивалась бы с белой страницей и она на секунду становилась жёлтой */
   html.is-menu-open .header,
-  html.is-menu-open .header__cta {
+  html.is-menu-open .header__cta,
+  html.is-menu-closing .header,
+  html.is-menu-closing .header__cta {
     mix-blend-mode: normal;
   }
 

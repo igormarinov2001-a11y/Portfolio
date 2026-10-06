@@ -130,7 +130,18 @@ document.querySelectorAll('.nav__list a').forEach((link) => {
 // Закрывается по ссылке в меню, по Esc и при переходе на широкий экран.
 document.querySelectorAll('[data-burger]').forEach((burger) => {
   const root = document.documentElement;
+  let closingTimer = 0;
   const setOpen = (open) => {
+    const wasOpen = root.classList.contains('is-menu-open');
+    // После закрытия ещё 0.7с держим is-menu-closing: пока синяя шторка уходит, шапку нельзя смешивать (mix-blend-mode)
+    if (wasOpen && !open) {
+      root.classList.add('is-menu-closing');
+      clearTimeout(closingTimer);
+      closingTimer = setTimeout(() => root.classList.remove('is-menu-closing'), 700);
+    } else if (open) {
+      clearTimeout(closingTimer);
+      root.classList.remove('is-menu-closing');
+    }
     root.classList.toggle('is-menu-open', open);
     burger.setAttribute('aria-expanded', String(open));
     burger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
@@ -654,7 +665,7 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 (() => {
   if (!/[?&]v=/.test(window.location.search)) return;
   const tag = document.createElement('div');
-  tag.textContent = 'build: works-10px';
+  tag.textContent = 'build: menu-fix';
   tag.setAttribute('aria-hidden', 'true');
   tag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:200;padding:3px 7px;border-radius:4px;background:rgba(128,128,128,.55);color:#fff;font:10px/1.2 system-ui,sans-serif;pointer-events:none';
   document.body.appendChild(tag);
