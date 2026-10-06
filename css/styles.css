@@ -1250,7 +1250,7 @@ html.is-loading .loader {
 
   .about__label {
     margin-bottom: calc(44 * var(--u));
-    font-size: calc(14 * var(--u));
+    font-size: calc(15 * var(--u));
   }
 
   .about__lead {
@@ -1307,7 +1307,7 @@ html.is-loading .loader {
 
   .works__label {
     margin-bottom: 0;
-    font-size: calc(14 * var(--u));
+    font-size: calc(15 * var(--u));
   }
 
   .works__tag {
