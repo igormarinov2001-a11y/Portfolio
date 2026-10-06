@@ -168,7 +168,7 @@ document.querySelectorAll('[data-slideshow]').forEach((box) => {
 // её (лёгкое течение + медленный дрейф: приближение, сдвиг, поворот). Холст в 3 раза меньше
 // экрана (градиент мягкий, это незаметно), его растягивает браузер, поэтому он лёгкий даже на
 // телефоне. Если WebGL недоступен, остаётся обычная картинка.
-const createGradient = (canvas, image, animated) => {
+const createGradient = (canvas, image, animated, getSize) => {
   const RES = 1 / 3; // размер холста относительно экрана
   const SPEED = 1; // скорость переливания и дрейфа (больше = быстрее)
   const gl = canvas.getContext('webgl', { antialias: false, alpha: false, depth: false, stencil: false, powerPreference: 'low-power' });
@@ -265,8 +265,9 @@ const createGradient = (canvas, image, animated) => {
   };
 
   const resize = () => {
-    const w = Math.max(2, Math.round(document.documentElement.clientWidth * RES));
-    const h = Math.max(2, Math.round(window.innerHeight * RES));
+    const size = getSize();
+    const w = Math.max(2, Math.round(size.width * RES));
+    const h = Math.max(2, Math.round(size.height * RES));
     if (canvas.width !== w || canvas.height !== h) {
       canvas.width = w;
       canvas.height = h;
@@ -312,7 +313,8 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   const hero = document.querySelector('.hero');
   const header = document.querySelector('.header');
   const media = reveal.querySelector('.reveal__media');
-  const probe = reveal.querySelector('.reveal__probe');
+  const probe = reveal.querySelector('.reveal__probe:not(.reveal__probe--end)');
+  const probeEnd = reveal.querySelector('.reveal__probe--end');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const SMOOTHING = reduceMotion ? 1 : 0.4; // 1 = без сглаживания, меньше = плавнее (но и мягче)
   let peek = 0.103; // доля высоты экрана, на которую блок выглядывает в начале (берётся из CSS: --peek)
@@ -325,6 +327,7 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   let start = 0; // положение верха блока в самом начале
   let startWidth = 0; // ширина окна градиента в самом начале
   let startHeight = 0; // высота окна градиента в самом начале
+  let endHeight = 0; // высота окна градиента, когда он раскрылся полностью (--h1)
 
   const measure = () => {
     distance = reveal.offsetHeight || 1;
@@ -333,6 +336,7 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
     start = window.innerHeight * (1 - peek);
     startWidth = probe ? probe.offsetWidth : window.innerWidth * 0.32;
     startHeight = probe ? probe.offsetHeight : window.innerHeight * 0.2;
+    endHeight = probeEnd ? probeEnd.offsetHeight : window.innerHeight;
   };
 
   const render = () => {
@@ -344,7 +348,7 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
     const screenW = document.documentElement.clientWidth;
     const screenH = window.innerHeight;
     const boxW = startWidth + (screenW - startWidth) * current;
-    const boxH = startHeight + (screenH - startHeight) * current;
+    const boxH = startHeight + (endHeight - startHeight) * current;
     media.style.setProperty('--ct', `${Math.max(0, y).toFixed(1)}px`);
     media.style.setProperty('--cb', `${Math.max(0, screenH - y - boxH).toFixed(1)}px`);
     media.style.setProperty('--cs', `${((screenW - boxW) / 2).toFixed(1)}px`);
@@ -357,7 +361,7 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
     // Дрейф градиента запускается, когда он впервые раскрылся на весь экран, и дальше идёт
     // всё время, пока блок виден (при скролле не прерывается и не сбрасывается)
     if (current > 0.995) reveal.classList.add('is-armed');
-    const live = y > -window.innerHeight;
+    const live = y + boxH > 0;
     reveal.classList.toggle('is-live', live);
     if (shader) shader.setActive(live);
   };
@@ -380,7 +384,7 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   const picture = media.querySelector('img');
   let shader = null;
   const startShader = () => {
-    shader = createGradient(canvas, picture, !reduceMotion);
+    shader = createGradient(canvas, picture, !reduceMotion, () => ({ width: document.documentElement.clientWidth, height: endHeight || window.innerHeight }));
     if (!shader) return;
     reveal.classList.add('has-shader');
     canvas.addEventListener('webglcontextlost', (e) => {
@@ -397,6 +401,7 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   }
 
   measure();
+  if (shader) shader.resize();
   target = Math.min(1, Math.max(0, (window.scrollY - extra) / distance));
   current = target; // при перезагрузке страницы посреди скролла сразу ставим нужный размер
   render();

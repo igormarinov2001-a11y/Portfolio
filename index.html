@@ -113,10 +113,13 @@
     <!-- Градиентный блок: выглядывает снизу первого экрана, при скролле растёт на весь экран -->
     <section class="reveal" data-reveal aria-hidden="true">
       <div class="reveal__media">
-        <img src="images/gradient.webp" width="2000" height="1125" alt="">
-        <canvas class="reveal__canvas"></canvas>
+        <div class="reveal__layer">
+          <img src="images/gradient.webp" width="2000" height="1125" alt="">
+          <canvas class="reveal__canvas"></canvas>
+        </div>
       </div>
       <span class="reveal__probe"></span>
+      <span class="reveal__probe reveal__probe--end"></span>
     </section>
 
     <section class="about" id="about">

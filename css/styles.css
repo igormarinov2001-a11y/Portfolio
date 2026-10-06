@@ -68,6 +68,10 @@
      другим). */
   --vh: 1svh;
 
+  /* Высота градиента, когда он раскрылся полностью. На десктопе — весь экран, на телефоне ниже
+     (см. раздел «Телефон и планшет»). */
+  --reveal-h: calc(100 * var(--vh));
+
   /* Отступ сверху под системные элементы (вырез, статус-бар): на сайте обычно 0 */
   --top-inset: env(safe-area-inset-top, 0px);
 
@@ -622,6 +626,7 @@ html.is-loading .loader {
   --h0: 18vw;             /* высота в начале (16:9 от ширины) */
   --reveal-distance: calc(20 * var(--vh)); /* сколько нужно проскроллить, чтобы градиент закрыл экран */
   --peek: 0.103;          /* доля высоты экрана, на которую блок выглядывает в начале (читает js/main.js) */
+  --h1: var(--reveal-h);  /* высота в конце раскрытия */
   position: relative;
   height: var(--reveal-distance);
 }
@@ -638,7 +643,18 @@ html.is-loading .loader {
   clip-path: inset(var(--ct, 0px) var(--cs, 0px) var(--cb, 0px) var(--cs, 0px));
 }
 
-.reveal__media img,
+/* Слой с картинкой и холстом: высота --h1, едет вместе с окном (transform на GPU) */
+.reveal__layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--h1);
+  transform: translate3d(0, var(--y), 0);
+  will-change: transform;
+}
+
+.reveal__layer img,
 .reveal__canvas {
   position: absolute;
   inset: 0;
@@ -674,6 +690,11 @@ html.is-loading .loader {
   height: var(--h0);
   visibility: hidden;
   pointer-events: none;
+}
+
+.reveal__probe--end {
+  width: 1px;
+  height: var(--h1);
 }
 
 /* Дрейф картинки. Классы ставит js/main.js:
@@ -716,6 +737,7 @@ html.is-loading .loader {
 .about {
   position: relative;
   z-index: 1;
+  margin-top: calc(var(--reveal-h) - 100 * var(--vh)); /* если градиент ниже экрана, About подтягивается к нему */
   padding: calc(180 * var(--u)) var(--gutter) calc(180 * var(--u)) calc(339 * var(--u));
 }
 
@@ -1187,11 +1209,18 @@ html.is-loading .loader {
     min-width: 0;
   }
 
-  /* Градиент: выглядывает снизу узким окошком (239px по ширине, 54px над нижним краем) */
+  /* Градиент: выглядывает снизу узким окошком (239px по ширине, 54px над нижним краем), растёт
+     до 65% высоты экрана, а не до всего. Он закрывает как раз оставшуюся часть хиро: скролл на
+     раскрытие 35% экрана, хиро к этому моменту уехало вверх на столько же. */
+  :root {
+    --reveal-h: calc(65 * var(--vh));
+  }
+
   .reveal {
     --w0: calc(239 * var(--u));
     --h0: calc(134 * var(--u));
     --peek: 0.0634;
+    --reveal-distance: calc(35 * var(--vh));
   }
 
   /* About */
