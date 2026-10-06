@@ -646,3 +646,16 @@ document.querySelectorAll('[data-works]').forEach((section) => {
     update();
   });
 });
+
+
+// Метка сборки для проверки: если в адресе есть ?v=…, в углу страницы показывается название
+// сборки. Так сразу видно, какая версия загрузилась (Safari любит показывать старую из кэша).
+// Перед запуском сайта для всех этот блок можно удалить.
+(() => {
+  if (!/[?&]v=/.test(window.location.search)) return;
+  const tag = document.createElement('div');
+  tag.textContent = 'build: menu-curtain';
+  tag.setAttribute('aria-hidden', 'true');
+  tag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:200;padding:3px 7px;border-radius:4px;background:rgba(128,128,128,.55);color:#fff;font:10px/1.2 system-ui,sans-serif;pointer-events:none';
+  document.body.appendChild(tag);
+})();
