@@ -233,22 +233,31 @@ const createGradient = (canvas, image, animated, getSize) => {
   gl.enableVertexAttribArray(position);
   gl.vertexAttribPointer(position, 2, gl.FLOAT, false, 0, 0);
 
-  // Текстура: картинка, уменьшенная до 1024px по ширине (хватает: градиент мягкий)
-  const texW = Math.min(1024, image.naturalWidth);
-  const texH = Math.round((texW * image.naturalHeight) / image.naturalWidth);
+  // Текстура: картинка, уменьшенная до 1024px по ширине (хватает: градиент мягкий).
+  // На телефоне <picture> отдаёт вертикальную картинку, на десктопе горизонтальную;
+  // при смене (например, поворот телефона) updateTexture() загружает новую.
   const scratch = document.createElement('canvas');
-  scratch.width = texW;
-  scratch.height = texH;
-  scratch.getContext('2d').drawImage(image, 0, 0, texW, texH);
   const texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, scratch);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   gl.uniform1i(gl.getUniformLocation(program, 'u_tex'), 0);
-  gl.uniform1f(gl.getUniformLocation(program, 'u_aspect'), texW / texH);
+  const aspectLoc = gl.getUniformLocation(program, 'u_aspect');
+
+  const updateTexture = () => {
+    if (!image.naturalWidth) return;
+    const texW = Math.min(1024, image.naturalWidth);
+    const texH = Math.round((texW * image.naturalHeight) / image.naturalWidth);
+    scratch.width = texW;
+    scratch.height = texH;
+    scratch.getContext('2d').drawImage(image, 0, 0, texW, texH);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, scratch);
+    gl.uniform1f(aspectLoc, texW / texH);
+  };
+  updateTexture();
 
   const resLoc = gl.getUniformLocation(program, 'u_res');
   const timeLoc = gl.getUniformLocation(program, 'u_time');
@@ -296,6 +305,10 @@ const createGradient = (canvas, image, animated, getSize) => {
   return {
     resize,
     wake,
+    updateTexture() {
+      updateTexture();
+      draw();
+    },
     // Крутим холст только пока градиент виден на экране
     setActive(on) {
       active = on;
@@ -396,8 +409,10 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
     render(); // сообщаем холсту, виден ли он сейчас
   };
   if (canvas && picture) {
-    if (picture.complete && picture.naturalWidth) startShader();
-    else picture.addEventListener('load', startShader, { once: true });
+    // load срабатывает и при смене источника <picture> (телефон/десктоп)
+    const onPicture = () => (shader ? shader.updateTexture() : startShader());
+    picture.addEventListener('load', onPicture);
+    if (picture.complete && picture.naturalWidth) onPicture();
   }
 
   measure();
