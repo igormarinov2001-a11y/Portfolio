@@ -1,3 +1,59 @@
+// Лоадер. Показывает реальный прогресс загрузки (шрифты и картинки страницы), но не быстрее,
+// чем за MIN_MS, чтобы счётчик успел «пробежать». Когда дошёл до 100%, чуть держит и уезжает вверх.
+(() => {
+  const loader = document.querySelector('[data-loader]');
+  const root = document.documentElement;
+  if (!loader) return;
+
+  const percent = loader.querySelector('[data-loader-percent]');
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const MIN_MS = reduceMotion ? 600 : 1800; // минимум, за сколько счётчик дойдёт до 100%
+  const HOLD_MS = 250; // пауза на 100% перед уходом
+  const EXIT_MS = reduceMotion ? 400 : 900; // сколько длится уход (как в CSS)
+
+  // Что считаем «загруженным»: шрифты + все картинки на странице
+  const images = [...document.images];
+  const total = images.length + 1;
+  let loaded = 0;
+  const done = () => { loaded += 1; };
+
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(done, done);
+  images.forEach((img) => {
+    if (img.complete) done();
+    else {
+      img.addEventListener('load', done, { once: true });
+      img.addEventListener('error', done, { once: true });
+    }
+  });
+
+  const start = performance.now();
+  let finished = false;
+
+  const finish = () => {
+    if (finished) return;
+    finished = true;
+    setTimeout(() => {
+      loader.classList.add('is-done');
+      setTimeout(() => {
+        root.classList.remove('is-loading'); // лоадер скрыт, скролл снова работает
+        loader.remove();
+      }, EXIT_MS);
+    }, HOLD_MS);
+  };
+
+  const tick = (now) => {
+    const byTime = 1 - Math.pow(1 - Math.min(1, (now - start) / MIN_MS), 3); // быстро в начале, медленно в конце
+    const byLoad = loaded / total;
+    const p = Math.min(byTime, byLoad);
+    loader.style.setProperty('--p', p.toFixed(4));
+    percent.textContent = `${Math.round(p * 100)}%`;
+    if (p >= 1) finish();
+    else requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+})();
+
+
 // Анимация пунктов меню: при наведении буквы по очереди «прокатываются» вверх.
 // Скрипт режет текст ссылки на буквы и рисует каждую дважды (оригинал и копия снизу);
 // сама анимация — в css/styles.css, раздел «Меню: прокатывание букв».

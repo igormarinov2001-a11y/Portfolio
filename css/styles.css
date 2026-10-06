@@ -129,6 +129,86 @@ img {
 
 
 /* ==========================================================================
+   3.1 Лоадер
+   Закрывает экран, пока грузятся шрифты и картинки: «Est 2022», название по центру, счётчик
+   справа и тонкая линия прогресса. Группа стоит по центру экрана. Прогресс --p (0…1) и
+   класс is-done (уход лоадера) ставит js/main.js.
+   ========================================================================== */
+
+html.is-loading {
+  overflow: hidden; /* пока лоадер, страницу не скроллим */
+}
+
+.loader {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none; /* без JS лоадера нет (класс is-loading ставит скрипт в <head>) */
+  place-items: center;
+  padding: 0 var(--gutter);
+  background: var(--color-bg);
+  --p: 0;
+}
+
+html.is-loading .loader {
+  display: grid;
+}
+
+.loader__inner {
+  width: 100%;
+  transition: opacity 0.35s ease;
+}
+
+.loader__row {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  font-size: max(13px, calc(16 * var(--u)));
+  line-height: calc(20 * var(--u));
+}
+
+.loader__logo {
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.loader__logo .serif {
+  display: inline-block;
+  margin-right: calc(3 * var(--u));
+}
+
+.loader__percent {
+  justify-self: end;
+  font-variant-numeric: tabular-nums; /* цифры одной ширины, чтобы счётчик не дёргался */
+}
+
+/* Линия прогресса: дорожка — белый 40%, заполнение — белое */
+.loader__bar {
+  height: 1px;
+  margin-top: calc(23 * var(--u));
+  background: var(--color-text-dim);
+}
+
+.loader__fill {
+  display: block;
+  height: 100%;
+  background: var(--color-text);
+  transform: scaleX(var(--p));
+  transform-origin: left center;
+}
+
+/* Уход: сначала содержимое гаснет, потом лоадер уезжает вверх */
+.loader.is-done {
+  transform: translateY(-100%);
+  transition: transform 0.9s cubic-bezier(0.76, 0, 0.24, 1);
+}
+
+.loader.is-done .loader__inner {
+  opacity: 0;
+}
+
+
+/* ==========================================================================
    4. Линии сетки (на 25%, 50% и 75% ширины)
    ========================================================================== */
 
@@ -330,6 +410,12 @@ img {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .loader.is-done {
+    transform: none;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
   .work img,
   .work__strip,
   .works--armed .works__label,

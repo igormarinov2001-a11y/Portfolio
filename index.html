@@ -6,8 +6,25 @@
   <title>The Northlane — Agency</title>
   <meta name="description" content="Senior designers. Fixed process. Pixel-perfect handoff. Brand, product, and web for teams that can't afford average.">
   <link rel="stylesheet" href="css/styles.css">
+  <!-- Лоадер показывается только если работает JavaScript; аварийный таймер на случай сбоя -->
+  <script>
+    document.documentElement.classList.add('is-loading');
+    setTimeout(function () { document.documentElement.classList.remove('is-loading'); }, 10000);
+  </script>
 </head>
 <body>
+
+  <!-- Лоадер: счётчик и тонкая линия прогресса, пока грузятся шрифты и картинки -->
+  <div class="loader" data-loader role="status" aria-label="Loading">
+    <div class="loader__inner">
+      <div class="loader__row">
+        <span class="loader__est">Est 2022</span>
+        <span class="loader__logo"><span class="serif">The</span> Northlane</span>
+        <span class="loader__percent" data-loader-percent aria-hidden="true">0%</span>
+      </div>
+      <div class="loader__bar" aria-hidden="true"><span class="loader__fill" data-loader-fill></span></div>
+    </div>
+  </div>
 
   <!-- Три вертикальные линии сетки на всю высоту страницы -->
   <div class="grid-lines" aria-hidden="true">
