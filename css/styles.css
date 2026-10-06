@@ -1160,10 +1160,21 @@ html.is-loading .loader {
     display: flex;
     align-items: center; /* список по центру экрана, как в макете */
     padding: calc(var(--top-inset) + 12 * var(--u)) var(--gutter) 0;
-    background: var(--color-accent);
     visibility: hidden;
-    opacity: 0;
-    transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+    transition: visibility 0s linear 0.6s; /* прячем после того, как синяя шторка ушла */
+  }
+
+  /* Синяя заливка — отдельный слой: при открытии опускается сверху вниз, как шторка (быстро,
+     резкий старт и мягкое торможение), при закрытии уходит дальше вниз. Только transform,
+     поэтому лёгкая для видеокарты. */
+  .nav::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--color-accent);
+    transform: scaleY(0);
+    transform-origin: 50% 100%; /* закрытие: верхний край уезжает вниз */
+    transition: transform 0.55s cubic-bezier(0.76, 0, 0.24, 1);
   }
 
   html.is-menu-open {
@@ -1172,8 +1183,12 @@ html.is-loading .loader {
 
   html.is-menu-open .nav {
     visibility: visible;
-    opacity: 1;
-    transition: opacity 0.3s ease;
+    transition: none;
+  }
+
+  html.is-menu-open .nav::before {
+    transform: scaleY(1);
+    transform-origin: 50% 0; /* открытие: нижний край едет сверху вниз */
   }
 
   html.is-menu-open .header,
@@ -1182,6 +1197,7 @@ html.is-loading .loader {
   }
 
   .nav__list {
+    position: relative; /* над синей заливкой */
     flex-direction: column;
     gap: 0;
   }
@@ -1193,8 +1209,8 @@ html.is-loading .loader {
     letter-spacing: 0;
   }
 
-  /* Открытие меню: пункты по очереди выезжают снизу из-под своей строки (строка обрезает),
-     каждый следующий на 0.07с позже. Закрытие быстрое, все сразу. */
+  /* Открытие меню: после шторки пункты по очереди выезжают снизу из-под своей строки (строка
+     обрезает), каждый следующий на 0.07с позже. Закрытие быстрое, все сразу. */
   .nav__list li {
     overflow: hidden;
   }
@@ -1212,14 +1228,23 @@ html.is-loading .loader {
 
   html.is-menu-open .nav__list a {
     transform: none;
-    transition: transform 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) calc(0.12s + var(--i, 0) * 0.07s);
+    transition: transform 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) calc(0.3s + var(--i, 0) * 0.07s); /* пункты начинают, когда шторка дошла до середины */
   }
 
   @media (prefers-reduced-motion: reduce) {
     .nav__list a,
-    html.is-menu-open .nav__list a {
+    html.is-menu-open .nav__list a,
+    .nav::before {
       transform: none;
       transition: none;
+    }
+
+    .nav::before {
+      opacity: 0;
+    }
+
+    html.is-menu-open .nav::before {
+      opacity: 1;
     }
   }
 
