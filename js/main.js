@@ -329,7 +329,11 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   const probe = reveal.querySelector('.reveal__probe:not(.reveal__probe--end)');
   const probeEnd = reveal.querySelector('.reveal__probe--end');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const SMOOTHING = reduceMotion ? 1 : 0.4; // 1 = без сглаживания, меньше = плавнее (но и мягче)
+  // Сглаживание и «разгон»: берутся из CSS (--reveal-smooth, --reveal-ease), на телефоне мягче.
+  // smooth — доля пути до цели за один кадр на 60 Гц (1 = без сглаживания, меньше = плавнее);
+  // ease — 0…1, насколько раскрытие начинается и заканчивается мягче (0 = линейно).
+  let smooth = reduceMotion ? 1 : 0.4;
+  let ease = 0;
   let peek = 0.103; // доля высоты экрана, на которую блок выглядывает в начале (берётся из CSS: --peek)
 
   let current = 0; // сглаженный прогресс раскрытия
@@ -345,7 +349,10 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
   const measure = () => {
     distance = reveal.offsetHeight || 1;
     extra = Math.max(0, hero.offsetHeight - window.innerHeight);
-    peek = parseFloat(getComputedStyle(reveal).getPropertyValue('--peek')) || 0.103;
+    const style = getComputedStyle(reveal);
+    peek = parseFloat(style.getPropertyValue('--peek')) || 0.103;
+    if (!reduceMotion) smooth = parseFloat(style.getPropertyValue('--reveal-smooth')) || 0.4;
+    ease = reduceMotion ? 0 : parseFloat(style.getPropertyValue('--reveal-ease')) || 0;
     start = window.innerHeight * (1 - peek);
     startWidth = probe ? probe.offsetWidth : window.innerWidth * 0.32;
     startHeight = probe ? probe.offsetHeight : window.innerHeight * 0.2;
@@ -379,15 +386,31 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
     if (shader) shader.setActive(live);
   };
 
-  const tick = () => {
-    current += (target - current) * SMOOTHING;
+  // Прогресс раскрытия по скроллу (0…1) с мягким стартом и концом, если задан --reveal-ease
+  const progress = () => {
+    const raw = Math.min(1, Math.max(0, (window.scrollY - extra) / distance));
+    return raw + (raw * raw * (3 - 2 * raw) - raw) * ease;
+  };
+
+  let lastTick = 0;
+  const tick = (now) => {
+    // Сглаживание не зависит от частоты экрана (60/120 Гц): доля за кадр пересчитывается по времени
+    const dt = lastTick ? Math.min(64, now - lastTick) : 16.7;
+    lastTick = now;
+    const k = 1 - Math.pow(1 - smooth, dt / 16.7);
+    current += (target - current) * k;
     if (Math.abs(target - current) < 0.0005) current = target;
     render();
-    frame = current === target ? null : requestAnimationFrame(tick);
+    if (current === target) {
+      frame = null;
+      lastTick = 0;
+    } else {
+      frame = requestAnimationFrame(tick);
+    }
   };
 
   const update = () => {
-    target = Math.min(1, Math.max(0, (window.scrollY - extra) / distance));
+    target = progress();
     render();
     if (!frame) frame = requestAnimationFrame(tick);
   };
@@ -417,7 +440,7 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
 
   measure();
   if (shader) shader.resize();
-  target = Math.min(1, Math.max(0, (window.scrollY - extra) / distance));
+  target = progress();
   current = target; // при перезагрузке страницы посреди скролла сразу ставим нужный размер
   render();
 
