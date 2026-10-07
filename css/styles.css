@@ -1077,6 +1077,7 @@ html.is-loading .loader {
 .marquee__group {
   display: flex;
   flex: none;
+  align-items: baseline; /* текст и дата стоят на одной базовой линии, хотя шрифты и размеры разные */
 }
 
 .marquee__item {
