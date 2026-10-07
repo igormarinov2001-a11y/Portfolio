@@ -878,7 +878,7 @@ html.is-loading .loader {
 /* Содержимое секции: белый фон у него только когда работает скрипт (works--armed) */
 .works__body {
   position: relative;
-  padding: calc(180 * var(--u)) var(--gutter);
+  padding: calc(189 * var(--u)) var(--gutter) calc(180 * var(--u));
 }
 
 .works--armed .works__body {
@@ -960,9 +960,16 @@ html.is-loading .loader {
   z-index: 2;
 }
 
-/* Подпись «Digital Design» справа от заголовка есть только на телефоне */
+/* Заголовок слева и подпись «Digital Design» справа */
+.works__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
 .works__tag {
-  display: none;
+  font-size: calc(24 * var(--u));
+  line-height: 1;
 }
 
 /* Когда скрипт работает (works--armed): фон белый, подпись и кнопка тёмные, а подпись,
@@ -1007,7 +1014,7 @@ html.is-loading .loader {
 .works--armed .works__more { transition-delay: 0.36s, 0.36s, 0.12s; }
 
 .works__label {
-  margin-bottom: calc(23 * var(--u));
+  margin-bottom: calc(14 * var(--u));
   font-size: calc(24 * var(--u));
   line-height: 1;
 }
@@ -1015,7 +1022,7 @@ html.is-loading .loader {
 .works__grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: calc(16 * var(--u));
+  gap: calc(8 * var(--u));
 }
 
 .work {
@@ -1027,7 +1034,7 @@ html.is-loading .loader {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 927 / 644;
+  aspect-ratio: 1862 / 1288;
   object-fit: cover;
   transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
@@ -1043,12 +1050,12 @@ html.is-loading .loader {
   right: 0;
   display: flex;
   align-items: center;
-  height: calc(32 * var(--u));
+  height: calc(34 * var(--u));
   overflow: hidden;
   background: var(--color-accent); /* синяя заливка, как у ховера главной кнопки */
   color: var(--color-text);
   font-size: max(12px, calc(15 * var(--u)));
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1;
   white-space: nowrap;
   pointer-events: none;
@@ -1073,7 +1080,16 @@ html.is-loading .loader {
 }
 
 .marquee__item {
-  padding-right: calc(40 * var(--u)); /* промежуток между элементами ленты */
+  padding-right: calc(47 * var(--u)); /* промежуток между элементами ленты */
+}
+
+/* Текст («View case study») курсивом, дата («2026») обычным шрифтом */
+.marquee__item--serif {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+  font-size: 0.96em; /* Libre Caslon шире Nyght, поэтому чуть меньше */
+  letter-spacing: -0.02em;
 }
 
 @keyframes marquee {
@@ -1100,7 +1116,7 @@ html.is-loading .loader {
 .works__more {
   display: flex;
   width: fit-content;
-  margin: calc(44 * var(--u)) auto 0;
+  margin: calc(48 * var(--u)) auto 0;
 }
 
 
@@ -1490,6 +1506,10 @@ html.is-loading .loader {
 
   .works--armed .works__tag {
     color: var(--color-bg);
+  }
+
+  .work img {
+    aspect-ratio: 927 / 644;
   }
 
   .works__grid {
