@@ -641,7 +641,7 @@ document.querySelectorAll('[data-marquee]').forEach((el) => {
     for (let i = 0; i < REPEAT; i++) {
       parts.forEach((text, index) => {
         const item = document.createElement('span');
-        item.className = index % 2 === 0 ? 'marquee__item marquee__item--serif' : 'marquee__item';
+        item.className = index % 2 === 1 ? 'marquee__item marquee__item--serif' : 'marquee__item';
         item.textContent = text;
         group.append(item);
       });
@@ -733,7 +733,7 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 (() => {
   if (!/[?&]v=/.test(window.location.search)) return;
   const tag = document.createElement('div');
-  tag.textContent = `build: works-web-3 · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
+  tag.textContent = `build: strip-swap · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
   tag.setAttribute('aria-hidden', 'true');
   tag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:200;padding:3px 7px;border-radius:4px;background:rgba(128,128,128,.55);color:#fff;font:10px/1.2 system-ui,sans-serif;pointer-events:none';
   document.body.appendChild(tag);

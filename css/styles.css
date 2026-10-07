@@ -1083,7 +1083,7 @@ html.is-loading .loader {
   padding-right: calc(47 * var(--u)); /* промежуток между элементами ленты */
 }
 
-/* Текст («View case study») курсивом, дата («2026») обычным шрифтом */
+/* Текст («View case study») обычным шрифтом, дата («2026») курсивом */
 .marquee__item--serif {
   font-family: var(--font-serif);
   font-style: italic;
