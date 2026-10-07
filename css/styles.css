@@ -1081,15 +1081,19 @@ html.is-loading .loader {
 
 .marquee__item {
   padding-right: calc(47 * var(--u)); /* промежуток между элементами ленты */
+  font-size: 0.93em; /* капс выглядит крупнее строчных, поэтому чуть меньше */
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-/* Текст («View case study») обычным шрифтом, дата («2026») курсивом */
+/* Текст («VIEW CASE STUDY») обычным шрифтом капсом, дата («2026») курсивом */
 .marquee__item--serif {
   font-family: var(--font-serif);
   font-style: italic;
   font-weight: 400;
-  font-size: 1.13em;
+  font-size: 1.2em; /* компенсирует 0.93em выше: дата остаётся 17px */
   letter-spacing: -0.02em;
+  text-transform: none;
   /* У Libre Caslon тонкие линии и нет жирного курсива: на синем он терялся. Лёгкая обводка
      цвета текста (0.5px) делает штрихи плотнее и сохраняет форму букв. */
   -webkit-text-stroke: 0.5px currentColor;
