@@ -968,7 +968,7 @@ html.is-loading .loader {
 }
 
 .works__tag {
-  font-size: calc(16 * var(--u));
+  font-size: calc(18 * var(--u));
   line-height: 1;
 }
 
@@ -1082,7 +1082,6 @@ html.is-loading .loader {
 
 .marquee__item {
   padding-right: calc(47 * var(--u)); /* промежуток между элементами ленты */
-  font-size: 0.93em; /* капс выглядит крупнее строчных, поэтому чуть меньше */
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
@@ -1092,7 +1091,7 @@ html.is-loading .loader {
   font-family: var(--font-serif);
   font-style: italic;
   font-weight: 400;
-  font-size: 1.2em; /* компенсирует 0.93em выше: дата остаётся 17px */
+  font-size: 0.9em; /* высота цифр равна высоте заглавных букв рядом: ряд выглядит ровным */
   letter-spacing: -0.02em;
   text-transform: none;
   /* У Libre Caslon тонкие линии и нет жирного курсива: на синем он терялся. Лёгкая обводка
