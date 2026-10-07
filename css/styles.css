@@ -968,7 +968,7 @@ html.is-loading .loader {
 }
 
 .works__tag {
-  font-size: calc(24 * var(--u));
+  font-size: calc(20 * var(--u));
   line-height: 1;
 }
 
@@ -1088,7 +1088,7 @@ html.is-loading .loader {
   font-family: var(--font-serif);
   font-style: italic;
   font-weight: 400;
-  font-size: 0.96em; /* Libre Caslon шире Nyght, поэтому чуть меньше */
+  font-size: 1.13em; /* у Libre Caslon тонкие линии: на синем меньше 17px плохо читается */
   letter-spacing: -0.02em;
 }
 
