@@ -631,12 +631,12 @@ html.is-loading .loader {
   --y: calc(89.7 * var(--vh));           /* запасное значение, если скрипт не загрузился: блок выглядывает снизу */
   --w0: 32vw;             /* ширина в начале */
   --h0: 18vw;             /* высота в начале (16:9 от ширины) */
-  --reveal-distance: calc(20 * var(--vh)); /* сколько нужно проскроллить, чтобы градиент закрыл экран */
+  --reveal-distance: calc(40 * var(--vh)); /* сколько нужно проскроллить, чтобы градиент закрыл экран */
   --peek: 0.103;          /* доля высоты экрана, на которую блок выглядывает в начале (читает js/main.js) */
   --h1: var(--reveal-h);  /* высота в конце раскрытия */
-  --reveal-timing: linear; /* кривая раскрытия в режиме scroll-анимации (см. .reveal--css) */
-  --reveal-smooth: 0.4;   /* сглаживание: доля пути за кадр (меньше = плавнее); читает js/main.js */
-  --reveal-ease: 0;       /* мягкий старт и конец раскрытия, 0…1 (0 = линейно) */
+  --reveal-timing: cubic-bezier(0.37, 0, 0.63, 1); /* кривая раскрытия в режиме scroll-анимации (см. .reveal--css): мягкий старт и конец */
+  --reveal-smooth: 0.15;  /* сглаживание: доля пути за кадр (меньше = плавнее); читает js/main.js */
+  --reveal-ease: 1;       /* мягкий старт и конец раскрытия, 0…1 (0 = линейно) */
   position: relative;
   height: var(--reveal-distance);
 }
@@ -968,7 +968,7 @@ html.is-loading .loader {
 }
 
 .works__tag {
-  font-size: calc(20 * var(--u));
+  font-size: calc(16 * var(--u));
   line-height: 1;
 }
 
@@ -1088,8 +1088,11 @@ html.is-loading .loader {
   font-family: var(--font-serif);
   font-style: italic;
   font-weight: 400;
-  font-size: 1.13em; /* у Libre Caslon тонкие линии: на синем меньше 17px плохо читается */
+  font-size: 1.13em;
   letter-spacing: -0.02em;
+  /* У Libre Caslon тонкие линии и нет жирного курсива: на синем он терялся. Лёгкая обводка
+     цвета текста (0.5px) делает штрихи плотнее и сохраняет форму букв. */
+  -webkit-text-stroke: 0.5px currentColor;
 }
 
 @keyframes marquee {
