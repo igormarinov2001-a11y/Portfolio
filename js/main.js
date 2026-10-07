@@ -536,14 +536,19 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
 
 // Текст в About: буквы серые (белый 40%) и по мере скролла по очереди, строго по одной, в порядке
 // текста, становятся белыми. Заливка жёстко привязана к положению скролла: сколько букв белые,
-// определяется только тем, докуда доскроллили (без очереди по времени). Медленно крутите,
-// буквы включаются одна за другой; быстро, заливка бежит так же быстро и всегда успевает
-// закончиться к концу блока. Назад при скролле вверх буквы гаснут так же. Смена мгновенная.
+// определяется тем, докуда доскроллили (без очереди по времени). Медленно крутите: буквы
+// включаются одна за другой в такт скроллу. Быстро: заливка бежит так же быстро, по несколько
+// букв за кадр (но не пачкой на весь текст) и дотягивается до положения скролла.
+// Назад при скролле вверх буквы гаснут так же. Смена мгновенная.
 document.querySelectorAll('[data-scrub]').forEach((block) => {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // остаётся белым
 
-  const START_AT = 0.85; // начинаем, когда верх текста поднялся до 85% высоты экрана
-  const END_AT = 0.6; // заканчиваем, когда низ текста поднялся до 60% высоты экрана
+  const START_AT = 0.95; // начинаем, когда верх текста поднялся до 95% высоты экрана (текст только вошёл)
+  const END_AT = 0.35; // заканчиваем, когда низ текста поднялся до 35% высоты экрана
+  // Заливка растянута на ~1 экран скролла: так на одну букву приходится больше пикселей, и даже
+  // при быстрой прокрутке буквы включаются по несколько за кадр, а не всё сразу.
+  const MAX_PER_FRAME = 6; // больше стольких букв за кадр не включаем: резкий рывок скролла
+  // превращается в быструю, но видимую пробежку по буквам (тянется ≈ 0.3с и не отстаёт надолго)
 
   // Читалкам с экрана отдаём весь текст целиком, а не по буквам
   block.setAttribute('aria-label', block.textContent.replace(/\s+/g, ' ').trim());
@@ -587,13 +592,14 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
     return Math.ceil(q * chars.length);
   };
 
-  // Включаем/гасим ровно столько букв, сколько нужно, в порядке текста (за один кадр сколько
-  // понадобится: при быстром скролле сразу несколько десятков)
+  // Включаем/гасим буквы в порядке текста, не больше MAX_PER_FRAME за кадр
   const apply = () => {
     frame = null;
     const target = readTarget();
-    while (shown < target) chars[shown++].classList.add('is-on');
-    while (shown > target) chars[--shown].classList.remove('is-on');
+    let budget = MAX_PER_FRAME;
+    while (shown < target && budget-- > 0) chars[shown++].classList.add('is-on');
+    while (shown > target && budget-- > 0) chars[--shown].classList.remove('is-on');
+    if (shown !== target) frame = requestAnimationFrame(apply); // догоняем, пока не дойдём до цели
   };
 
   const update = () => {
@@ -728,7 +734,7 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 (() => {
   if (!/[?&]v=/.test(window.location.search)) return;
   const tag = document.createElement('div');
-  tag.textContent = `build: scrub-direct · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
+  tag.textContent = `build: scrub-paced · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
   tag.setAttribute('aria-hidden', 'true');
   tag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:200;padding:3px 7px;border-radius:4px;background:rgba(128,128,128,.55);color:#fff;font:10px/1.2 system-ui,sans-serif;pointer-events:none';
   document.body.appendChild(tag);
