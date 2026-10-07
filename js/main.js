@@ -534,16 +534,16 @@ document.querySelectorAll('[data-reveal]').forEach((reveal) => {
 });
 
 
-// Текст в About: буквы серые (белый 40%) и по мере скролла по очереди, СТРОГО ПО ОДНОЙ,
-// становятся белыми. Скролл определяет, сколько букв должно быть белыми, а сами буквы
-// включаются друг за другом с фиксированным темпом (STEP_MS на букву), поэтому даже при
-// быстрой прокрутке заливка идёт по буквам, а не сразу пачкой. Смена мгновенная.
+// Текст в About: буквы серые (белый 40%) и по мере скролла по очереди, строго по одной, в порядке
+// текста, становятся белыми. Заливка жёстко привязана к положению скролла: сколько букв белые,
+// определяется только тем, докуда доскроллили (без очереди по времени). Медленно крутите,
+// буквы включаются одна за другой; быстро, заливка бежит так же быстро и всегда успевает
+// закончиться к концу блока. Назад при скролле вверх буквы гаснут так же. Смена мгновенная.
 document.querySelectorAll('[data-scrub]').forEach((block) => {
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return; // остаётся белым
 
   const START_AT = 0.85; // начинаем, когда верх текста поднялся до 85% высоты экрана
   const END_AT = 0.6; // заканчиваем, когда низ текста поднялся до 60% высоты экрана
-  const STEP_MS = 12; // сколько миллисекунд на одну букву (меньше = быстрее бежит заливка)
 
   // Читалкам с экрана отдаём весь текст целиком, а не по буквам
   block.setAttribute('aria-label', block.textContent.replace(/\s+/g, ' ').trim());
@@ -569,12 +569,9 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
   });
 
   let shown = 0; // сколько букв белые прямо сейчас
-  let target = 0; // сколько должно быть белыми по положению скролла
   let startScroll = 0;
   let endScroll = 1;
   let frame = null;
-  let last = 0;
-  let acc = 0;
 
   const measure = () => {
     const top = block.getBoundingClientRect().top + window.scrollY;
@@ -584,47 +581,45 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
     if (endScroll <= startScroll + 1) endScroll = startScroll + 1;
   };
 
+  // Сколько букв должно быть белыми при текущем скролле
   const readTarget = () => {
     const q = Math.min(1, Math.max(0, (window.scrollY - startScroll) / (endScroll - startScroll)));
-    target = Math.ceil(q * chars.length);
+    return Math.ceil(q * chars.length);
   };
 
-  // Двигаем заливку к цели по одной букве за STEP_MS (вперёд или назад)
-  const step = (now) => {
+  // Включаем/гасим ровно столько букв, сколько нужно, в порядке текста (за один кадр сколько
+  // понадобится: при быстром скролле сразу несколько десятков)
+  const apply = () => {
     frame = null;
-    if (last) acc += now - last;
-    last = now;
-    while (acc >= STEP_MS && shown !== target) {
-      if (shown < target) chars[shown++].classList.add('is-on');
-      else chars[--shown].classList.remove('is-on');
-      acc -= STEP_MS;
-    }
-    if (shown === target) {
-      acc = 0;
-      last = 0;
-    } else {
-      frame = requestAnimationFrame(step);
-    }
+    const target = readTarget();
+    while (shown < target) chars[shown++].classList.add('is-on');
+    while (shown > target) chars[--shown].classList.remove('is-on');
   };
 
   const update = () => {
-    readTarget();
-    if (!frame && shown !== target) {
-      acc = STEP_MS; // первая буква включается сразу, без задержки
-      frame = requestAnimationFrame(step);
-    }
+    if (!frame) frame = requestAnimationFrame(apply);
   };
 
   // При загрузке (например, перезагрузка страницы посреди скролла) сразу ставим нужное состояние
   measure();
-  readTarget();
-  for (; shown < target; shown++) chars[shown].classList.add('is-on');
+  apply();
 
   window.addEventListener('scroll', update, { passive: true });
   window.addEventListener('resize', () => {
     measure();
     update();
   });
+  // После загрузки шрифтов и картинок высота страницы могла измениться: пересчитываем границы
+  window.addEventListener('load', () => {
+    measure();
+    update();
+  });
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => {
+      measure();
+      update();
+    });
+  }
 });
 
 
@@ -733,7 +728,7 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 (() => {
   if (!/[?&]v=/.test(window.location.search)) return;
   const tag = document.createElement('div');
-  tag.textContent = `build: strip-even · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
+  tag.textContent = `build: scrub-direct · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
   tag.setAttribute('aria-hidden', 'true');
   tag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:200;padding:3px 7px;border-radius:4px;background:rgba(128,128,128,.55);color:#fff;font:10px/1.2 system-ui,sans-serif;pointer-events:none';
   document.body.appendChild(tag);

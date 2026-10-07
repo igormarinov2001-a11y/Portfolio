@@ -1091,7 +1091,7 @@ html.is-loading .loader {
   font-family: var(--font-serif);
   font-style: italic;
   font-weight: 400;
-  font-size: 0.9em; /* высота цифр равна высоте заглавных букв рядом: ряд выглядит ровным */
+  font-size: 1em; /* тот же размер, что у текста рядом */
   letter-spacing: -0.02em;
   text-transform: none;
   /* У Libre Caslon тонкие линии и нет жирного курсива: на синем он терялся. Лёгкая обводка
