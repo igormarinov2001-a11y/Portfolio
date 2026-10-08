@@ -737,32 +737,31 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 (() => {
   if (!/[?&]v=/.test(window.location.search)) return;
   const tag = document.createElement('div');
-  tag.textContent = `build: services-paced · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
+  tag.textContent = `build: services-steps · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
   tag.setAttribute('aria-hidden', 'true');
   tag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:200;padding:3px 7px;border-radius:4px;background:rgba(128,128,128,.55);color:#fff;font:10px/1.2 system-ui,sans-serif;pointer-events:none';
   document.body.appendChild(tag);
 })();
 
 
-// Блок «Services»: левая колонка (картинка с описанием) прилипает к экрану (sticky), список
-// справа продолжает скроллиться, и услуга, дошедшая до отметки (центр картинки на десктопе,
-// низ картинки на телефоне), становится активной. Пока ни одна не дошла, активна первая.
-// Нажатие на услугу докручивает её до отметки. Заливка картинки снизу вверх сделана в CSS,
-// здесь расставляются только классы.
+// Блок «Services»: секция высокая, сцена внутри неё прилипает к экрану (sticky). Скролл отдан
+// по куску на каждую услугу; когда пользователь переходит в новый кусок, услуги переключаются
+// СТРОГО по одной (минимум MIN_DWELL между сменами), даже если пролистать сразу несколько.
+// На смену услуги список уезжает вверх на строку (--k), картинка закрывается заливкой снизу вверх
+// (оба движения в CSS), здесь расставляются классы. Нажатие на услугу прокручивает к её куску.
 document.querySelectorAll('[data-services]').forEach((section) => {
   const items = [...section.querySelectorAll('[data-service]')];
   const slides = [...section.querySelectorAll('[data-service-slide]')];
   const captions = [...section.querySelectorAll('[data-service-caption]')];
-  const probe = section.querySelector('[data-service-probe]');
+  const stage = section.querySelector('.services__stage');
   let current = Math.max(0, items.findIndex((item) => item.classList.contains('is-active')));
-  let frame = 0;
   let target = current;
   let lastChange = 0;
   let timer = 0;
-  const MIN_DWELL = 700; // не чаще одной смены за это время (мс), даже если скроллить очень быстро
+  let frame = 0;
+  const MIN_DWELL = 800; // мс: заливка идёт 0.6 с, остаётся время рассмотреть картинку
 
   const activate = (index) => {
-    if (index === current) return;
     slides.forEach((slide) => slide.classList.remove('is-prev'));
     slides[current]?.classList.add('is-prev');
     [items, slides, captions].forEach((group) => {
@@ -770,38 +769,9 @@ document.querySelectorAll('[data-services]').forEach((section) => {
       group[index]?.classList.add('is-active');
     });
     current = index;
+    section.style.setProperty('--k', index);
   };
 
-  const center = (el) => {
-    const rect = el.getBoundingClientRect();
-    return rect.top + rect.height / 2;
-  };
-
-  const label = section.querySelector('.services__label');
-  const header = document.querySelector('.header');
-
-  // Услуги, уходящие вверх под шапку, плавно гаснут, чтобы не лезть на меню
-  const fadeUnderHeader = (el, headerH) => {
-    const c = center(el);
-    const k = Math.min(1, Math.max(0, (c - headerH) / 90));
-    el.style.opacity = k < 1 ? k.toFixed(2) : '';
-  };
-
-  const render = () => {
-    frame = 0;
-    const line = probe.getBoundingClientRect().top;
-    const headerH = header ? header.offsetHeight : 0;
-    let index = 0;
-    items.forEach((item, i) => {
-      if (center(item) <= line + 1) index = i;
-      fadeUnderHeader(item, headerH);
-    });
-    if (label) fadeUnderHeader(label, headerH);
-    target = index;
-    advance();
-  };
-
-  // К нужной услуге идём по одной: каждая успевает показаться, даже если пролистали сразу несколько
   const advance = () => {
     window.clearTimeout(timer);
     if (current === target) return;
@@ -815,17 +785,34 @@ document.querySelectorAll('[data-services]').forEach((section) => {
     if (current !== target) timer = window.setTimeout(advance, MIN_DWELL);
   };
 
+  // Геометрия: где начинается секция и сколько скролла приходится на одну услугу
+  const geometry = () => {
+    const top = section.getBoundingClientRect().top + window.scrollY;
+    const travel = section.offsetHeight - stage.offsetHeight;
+    const step = (travel - window.innerHeight * 0.3) / items.length;
+    return { top, step };
+  };
+
+  const render = () => {
+    frame = 0;
+    const { top, step } = geometry();
+    const index = Math.floor((window.scrollY - top) / step);
+    target = Math.min(items.length - 1, Math.max(0, index));
+    advance();
+  };
+
   const update = () => {
     if (!frame) frame = requestAnimationFrame(render);
   };
 
   items.forEach((item, index) => {
     item.addEventListener('click', () => {
-      const delta = center(item) - probe.getBoundingClientRect().top;
-      window.scrollTo({ top: window.scrollY + delta, behavior: 'smooth' });
+      const { top, step } = geometry();
+      window.scrollTo({ top: top + step * (index + 0.5), behavior: 'smooth' });
     });
   });
 
+  section.style.setProperty('--k', current);
   render();
   window.addEventListener('scroll', update, { passive: true });
   window.addEventListener('resize', update);

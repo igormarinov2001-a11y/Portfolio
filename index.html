@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>The Northlane — Agency</title>
   <meta name="description" content="Senior designers. Fixed process. Pixel-perfect handoff. Brand, product, and web for teams that can't afford average.">
-  <link rel="stylesheet" href="css/styles.css?v=20261008-1819">
+  <link rel="stylesheet" href="css/styles.css?v=20261008-1823">
   <!-- Лоадер показывается только если работает JavaScript; аварийный таймер на случай сбоя -->
   <script>
     document.documentElement.classList.add('is-loading');
@@ -201,7 +201,6 @@
 
       <div class="services__stage">
       <div class="services__media">
-        <span class="services__probe" data-service-probe aria-hidden="true"></span>
         <div class="services__slides">
           <img class="services__slide is-active" data-service-slide src="images/services-web.webp" width="770" height="613" alt="Meridian: a logistics website with a ship and the headline “Navigate without noise”">
           <img class="services__slide" data-service-slide src="images/services-brand.webp" width="770" height="613" alt="Nectar: brand identity with logo, packaging, signage, typography and social posts" loading="lazy">
@@ -221,6 +220,7 @@
       </div>
 
       <div class="services__list">
+        <div class="services__track">
         <p class="services__label serif">Services</p>
         <ul>
           <li><button class="service is-active" type="button" data-service>Web Design</button></li>
@@ -230,11 +230,12 @@
           <li><button class="service" type="button" data-service>Product Redesign</button></li>
           <li><button class="service" type="button" data-service>Business Consultation</button></li>
         </ul>
+        </div>
       </div>
       </div>
     </section>
   </main>
 
-  <script src="js/main.js?v=20261008-1819" defer></script>
+  <script src="js/main.js?v=20261008-1823" defer></script>
 </body>
 </html>
