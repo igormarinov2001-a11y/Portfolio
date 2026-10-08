@@ -737,82 +737,72 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 (() => {
   if (!/[?&]v=/.test(window.location.search)) return;
   const tag = document.createElement('div');
-  tag.textContent = `build: services-steps · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
+  tag.textContent = `build: services-ref · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
   tag.setAttribute('aria-hidden', 'true');
   tag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:200;padding:3px 7px;border-radius:4px;background:rgba(128,128,128,.55);color:#fff;font:10px/1.2 system-ui,sans-serif;pointer-events:none';
   document.body.appendChild(tag);
 })();
 
 
-// Блок «Services»: секция высокая, сцена внутри неё прилипает к экрану (sticky). Скролл отдан
-// по куску на каждую услугу; когда пользователь переходит в новый кусок, услуги переключаются
-// СТРОГО по одной (минимум MIN_DWELL между сменами), даже если пролистать сразу несколько.
-// На смену услуги список уезжает вверх на строку (--k), картинка закрывается заливкой снизу вверх
-// (оба движения в CSS), здесь расставляются классы. Нажатие на услугу прокручивает к её куску.
+// Блок «Services» (как в референсе monochrome.framer.ai): картинка с описанием слева прилипает к
+// экрану (sticky), список справа скроллится как обычный контент. Услуга, верх которой дошёл до
+// середины экрана, становится активной (картинка и описание меняются мгновенно, цвет плавно).
+// Пока ни одна не дошла, активна первая. Нажатие на услугу докручивает её до этой отметки.
+// На телефоне отметка — низ картинки с описанием.
 document.querySelectorAll('[data-services]').forEach((section) => {
   const items = [...section.querySelectorAll('[data-service]')];
   const slides = [...section.querySelectorAll('[data-service-slide]')];
   const captions = [...section.querySelectorAll('[data-service-caption]')];
-  const stage = section.querySelector('.services__stage');
+  const media = section.querySelector('.services__media');
+  const label = section.querySelector('.services__label');
+  const header = document.querySelector('.header');
+  const mobile = window.matchMedia('(max-width: 900px)');
   let current = Math.max(0, items.findIndex((item) => item.classList.contains('is-active')));
-  let target = current;
-  let lastChange = 0;
-  let timer = 0;
   let frame = 0;
-  const MIN_DWELL = 800; // мс: заливка идёт 0.6 с, остаётся время рассмотреть картинку
 
   const activate = (index) => {
-    slides.forEach((slide) => slide.classList.remove('is-prev'));
-    slides[current]?.classList.add('is-prev');
+    if (index === current) return;
     [items, slides, captions].forEach((group) => {
       group[current]?.classList.remove('is-active');
       group[index]?.classList.add('is-active');
     });
     current = index;
-    section.style.setProperty('--k', index);
   };
 
-  const advance = () => {
-    window.clearTimeout(timer);
-    if (current === target) return;
-    const wait = lastChange + MIN_DWELL - performance.now();
-    if (wait > 0) {
-      timer = window.setTimeout(advance, wait);
-      return;
-    }
-    activate(current + Math.sign(target - current));
-    lastChange = performance.now();
-    if (current !== target) timer = window.setTimeout(advance, MIN_DWELL);
-  };
+  // Где проходит отметка (в координатах окна)
+  const markY = () => (mobile.matches ? media.getBoundingClientRect().bottom + 28 : window.innerHeight / 2);
 
-  // Геометрия: где начинается секция и сколько скролла приходится на одну услугу
-  const geometry = () => {
-    const top = section.getBoundingClientRect().top + window.scrollY;
-    const travel = section.offsetHeight - stage.offsetHeight;
-    const step = (travel - window.innerHeight * 0.3) / items.length;
-    return { top, step };
+  // Услуги, уходящие вверх под шапку, плавно гаснут, чтобы не лезть на меню
+  const fadeUnderHeader = (el, headerH) => {
+    const rect = el.getBoundingClientRect();
+    const k = Math.min(1, Math.max(0, (rect.top + rect.height / 2 - headerH) / 90));
+    el.style.opacity = k < 1 ? k.toFixed(2) : '';
   };
 
   const render = () => {
     frame = 0;
-    const { top, step } = geometry();
-    const index = Math.floor((window.scrollY - top) / step);
-    target = Math.min(items.length - 1, Math.max(0, index));
-    advance();
+    const line = markY();
+    const headerH = header ? header.offsetHeight : 0;
+    let index = 0;
+    items.forEach((item, i) => {
+      if (item.getBoundingClientRect().top <= line) index = i;
+      fadeUnderHeader(item, headerH);
+    });
+    if (label) fadeUnderHeader(label, headerH);
+    activate(index);
   };
 
   const update = () => {
     if (!frame) frame = requestAnimationFrame(render);
   };
 
-  items.forEach((item, index) => {
+  items.forEach((item) => {
     item.addEventListener('click', () => {
-      const { top, step } = geometry();
-      window.scrollTo({ top: top + step * (index + 0.5), behavior: 'smooth' });
+      const delta = item.getBoundingClientRect().top - markY() + 2;
+      window.scrollTo({ top: window.scrollY + delta, behavior: 'smooth' });
     });
   });
 
-  section.style.setProperty('--k', current);
   render();
   window.addEventListener('scroll', update, { passive: true });
   window.addEventListener('resize', update);

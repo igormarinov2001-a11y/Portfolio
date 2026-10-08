@@ -1135,35 +1135,30 @@ html.is-loading .loader {
    ========================================================================== */
 
 .services {
-  --step: calc(50 * var(--vh)); /* сколько скролла отдано одной услуге */
-  --row: calc(112.8 * var(--u)); /* шаг списка: на столько он сдвигается при смене услуги */
   position: relative;
   z-index: 1;
-  height: calc(130 * var(--vh) + 6 * var(--step)); /* экран + по шагу на услугу + запас в конце */
   background: var(--color-text);
   color: var(--color-bg);
 }
 
-/* Сцена прилипает к верху экрана и стоит, пока скроллом (по очереди, через индекс) переключаются
-   услуги. Картинка при этом ровно по центру экрана по вертикали. */
+/* Две колонки, как в референсе. Левая (картинка с описанием) прилипает к экрану, когда картинка
+   оказывается ровно по центру по вертикали, и стоит, пока правая (список) скроллится как обычный
+   контент. Услуга, верх которой дошёл до середины экрана, становится активной (см. JS). */
 .services__stage {
-  position: sticky;
-  top: 0;
-  height: calc(100 * var(--vh));
   display: grid;
   grid-template-columns: calc(770 * var(--u)) 1fr;
-  grid-template-rows: 100%;
   column-gap: calc(175 * var(--u));
   align-items: start;
-  padding: 0 var(--gutter);
+  padding: calc(180 * var(--u)) var(--gutter);
 }
 
 /* Левая колонка: картинка 770×613 и описание под ней. Все картинки лежат друг на друге в одной
    ячейке, видна активная (плавное перетекание). Колонка начинается на уровне первой услуги. */
 .services__media {
-  position: relative;
+  position: sticky;
+  top: calc(50 * var(--vh) - 306.5 * var(--u)); /* центр картинки (613/2) = центр экрана */
   z-index: 2;
-  margin-top: calc(50 * var(--vh) - 306.5 * var(--u)); /* центр картинки (613/2) = центр экрана */
+  margin-top: calc(87 * var(--u));
 }
 
 .services__slides,
@@ -1171,36 +1166,16 @@ html.is-loading .loader {
   display: grid;
 }
 
+/* Как в референсе: картинка и описание меняются мгновенно, без анимации */
 .services__slide,
 .services__caption {
   grid-area: 1 / 1;
+  visibility: hidden;
 }
 
-/* Описание просто перетекает, а картинка закрывает предыдущую заливкой снизу вверх,
-   как на кнопках при наведении (та же кривая). */
-.services__caption {
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
+.services__slide.is-active,
 .services__caption.is-active {
-  opacity: 1;
-  transition-delay: 0.2s;
-}
-
-.services__slide {
-  clip-path: inset(100% 0 0 0);
-}
-
-.services__slide.is-prev {
-  z-index: 1;
-  clip-path: inset(0);
-}
-
-.services__slide.is-active {
-  z-index: 2;
-  clip-path: inset(0);
-  transition: clip-path 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+  visibility: visible;
 }
 
 .services__slide {
@@ -1218,21 +1193,12 @@ html.is-loading .loader {
 }
 
 /* Правая колонка: подпись и список услуг. Активная услуга чёрная, остальные серые. */
-/* Правая колонка: подпись и список едут вверх на одну строку при каждой смене услуги, активная
-   всегда на одном месте (на уровне центра картинки). Что уехало вверх, гаснет под шапкой. */
+/* Правая колонка: подпись и список услуг. Активная услуга чёрная, остальные серые (цвет меняется
+   плавно). Внизу запас, чтобы последняя услуга дошла до середины экрана, пока картинка ещё стоит. */
 .services__list {
   position: relative;
   z-index: 1;
-  height: 100%;
-  overflow: hidden;
-  -webkit-mask-image: linear-gradient(to bottom, transparent calc(55 * var(--u)), #000 calc(190 * var(--u)));
-  mask-image: linear-gradient(to bottom, transparent calc(55 * var(--u)), #000 calc(190 * var(--u)));
-}
-
-.services__track {
-  padding-top: calc(50 * var(--vh) - 306.5 * var(--u) + 187.5 * var(--u));
-  transform: translate3d(0, calc(var(--k, 0) * var(--row) * -1), 0);
-  transition: transform 0.6s cubic-bezier(0.65, 0, 0.35, 1);
+  padding-bottom: calc(459 * var(--u));
 }
 
 .services__label {
@@ -1260,7 +1226,7 @@ html.is-loading .loader {
   letter-spacing: -0.02em;
   text-align: left;
   cursor: pointer;
-  transition: color 0.3s ease;
+  transition: color 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
 .service.is-active {
@@ -1695,29 +1661,21 @@ html.is-loading .loader {
   .works__lines span:nth-child(3) { left: auto; right: calc(9.5 * var(--u)); }
 
   /* Services (черновик: макета под мобилку пока нет) */
-  /* Картинка с описанием сверху, под ней список, который уезжает вверх по строке за смену */
-  .services {
-    --step: calc(40 * var(--vh));
-    --row: calc(52 * var(--u));
-  }
-
+  /* Картинка с описанием прилипает под шапкой, список едет под ней и уходит за белую подложку.
+     Услуга становится активной, когда её верх доходит до низа картинки с описанием. */
   .services__stage {
-    display: flex;
-    flex-direction: column;
-    padding: calc(72 * var(--u)) var(--gutter) 0;
+    display: block;
+    padding: calc(60 * var(--u)) var(--gutter) calc(80 * var(--u));
   }
 
-  .services__media { margin-top: 0; padding-bottom: calc(20 * var(--u)); }
-
-  .services__list {
-    flex: 1;
-    min-height: 0;
-    height: auto;
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 calc(14 * var(--u)));
-    mask-image: linear-gradient(to bottom, transparent 0, #000 calc(14 * var(--u)));
+  .services__media {
+    top: calc(72 * var(--u));
+    margin-top: 0;
+    padding-bottom: calc(20 * var(--u));
+    background: var(--color-text);
   }
 
-  .services__track { padding-top: calc(8 * var(--u)); }
+  .services__list { margin: calc(8 * var(--u)) 0 calc(-96 * var(--u) + 30 * var(--vh)); padding-bottom: 0; }
   .services__label { margin-bottom: calc(20 * var(--u)); font-size: max(14px, calc(16 * var(--u))); }
   .service { font-size: calc(36 * var(--u)); line-height: calc(52 * var(--u)); }
   .services__caption { max-width: none; margin-top: calc(14 * var(--u)); font-size: max(14px, calc(15 * var(--u))); }
