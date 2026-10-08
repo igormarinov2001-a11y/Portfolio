@@ -737,21 +737,23 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 (() => {
   if (!/[?&]v=/.test(window.location.search)) return;
   const tag = document.createElement('div');
-  tag.textContent = `build: services-scroll · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
+  tag.textContent = `build: services-sticky · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
   tag.setAttribute('aria-hidden', 'true');
   tag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:200;padding:3px 7px;border-radius:4px;background:rgba(128,128,128,.55);color:#fff;font:10px/1.2 system-ui,sans-serif;pointer-events:none';
   document.body.appendChild(tag);
 })();
 
 
-// Блок «Services»: секция высокая, внутри неё сцена прилипает к экрану (sticky), и пока
-// пользователь скроллит дальше, услуги переключаются по очереди (каждой отдан свой кусок
-// скролла). Нажатие на услугу прокручивает к её куску. Картинка закрывает предыдущую заливкой
-// снизу вверх (см. CSS), здесь только расставляются классы.
+// Блок «Services»: левая колонка (картинка с описанием) прилипает к экрану (sticky), список
+// справа продолжает скроллиться, и услуга, дошедшая до отметки (центр картинки на десктопе,
+// низ картинки на телефоне), становится активной. Пока ни одна не дошла, активна первая.
+// Нажатие на услугу докручивает её до отметки. Заливка картинки снизу вверх сделана в CSS,
+// здесь расставляются только классы.
 document.querySelectorAll('[data-services]').forEach((section) => {
   const items = [...section.querySelectorAll('[data-service]')];
   const slides = [...section.querySelectorAll('[data-service-slide]')];
   const captions = [...section.querySelectorAll('[data-service-caption]')];
+  const probe = section.querySelector('[data-service-probe]');
   let current = Math.max(0, items.findIndex((item) => item.classList.contains('is-active')));
   let frame = 0;
 
@@ -766,19 +768,32 @@ document.querySelectorAll('[data-services]').forEach((section) => {
     current = index;
   };
 
-  // Сколько пикселей скролла приходится на одну услугу и где начинается прокрутка внутри секции
-  const geometry = () => {
-    const rect = section.getBoundingClientRect();
-    const top = rect.top + window.scrollY;
-    const travel = section.offsetHeight - section.querySelector('.services__stage').offsetHeight;
-    return { top, step: travel / items.length };
+  const center = (el) => {
+    const rect = el.getBoundingClientRect();
+    return rect.top + rect.height / 2;
+  };
+
+  const label = section.querySelector('.services__label');
+  const header = document.querySelector('.header');
+
+  // Услуги, уходящие вверх под шапку, плавно гаснут, чтобы не лезть на меню
+  const fadeUnderHeader = (el, headerH) => {
+    const c = center(el);
+    const k = Math.min(1, Math.max(0, (c - headerH) / 90));
+    el.style.opacity = k < 1 ? k.toFixed(2) : '';
   };
 
   const render = () => {
     frame = 0;
-    const { top, step } = geometry();
-    const index = Math.floor((window.scrollY - top) / step);
-    activate(Math.min(items.length - 1, Math.max(0, index)));
+    const line = probe.getBoundingClientRect().top;
+    const headerH = header ? header.offsetHeight : 0;
+    let index = 0;
+    items.forEach((item, i) => {
+      if (center(item) <= line + 1) index = i;
+      fadeUnderHeader(item, headerH);
+    });
+    if (label) fadeUnderHeader(label, headerH);
+    activate(index);
   };
 
   const update = () => {
@@ -787,8 +802,8 @@ document.querySelectorAll('[data-services]').forEach((section) => {
 
   items.forEach((item, index) => {
     item.addEventListener('click', () => {
-      const { top, step } = geometry();
-      window.scrollTo({ top: top + step * (index + 0.5), behavior: 'smooth' });
+      const delta = center(item) - probe.getBoundingClientRect().top;
+      window.scrollTo({ top: window.scrollY + delta, behavior: 'smooth' });
     });
   });
 
