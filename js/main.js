@@ -737,7 +737,7 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 (() => {
   if (!/[?&]v=/.test(window.location.search)) return;
   const tag = document.createElement('div');
-  tag.textContent = `build: services-sticky · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
+  tag.textContent = `build: services-paced · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
   tag.setAttribute('aria-hidden', 'true');
   tag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:200;padding:3px 7px;border-radius:4px;background:rgba(128,128,128,.55);color:#fff;font:10px/1.2 system-ui,sans-serif;pointer-events:none';
   document.body.appendChild(tag);
@@ -756,6 +756,10 @@ document.querySelectorAll('[data-services]').forEach((section) => {
   const probe = section.querySelector('[data-service-probe]');
   let current = Math.max(0, items.findIndex((item) => item.classList.contains('is-active')));
   let frame = 0;
+  let target = current;
+  let lastChange = 0;
+  let timer = 0;
+  const MIN_DWELL = 700; // не чаще одной смены за это время (мс), даже если скроллить очень быстро
 
   const activate = (index) => {
     if (index === current) return;
@@ -793,7 +797,22 @@ document.querySelectorAll('[data-services]').forEach((section) => {
       fadeUnderHeader(item, headerH);
     });
     if (label) fadeUnderHeader(label, headerH);
-    activate(index);
+    target = index;
+    advance();
+  };
+
+  // К нужной услуге идём по одной: каждая успевает показаться, даже если пролистали сразу несколько
+  const advance = () => {
+    window.clearTimeout(timer);
+    if (current === target) return;
+    const wait = lastChange + MIN_DWELL - performance.now();
+    if (wait > 0) {
+      timer = window.setTimeout(advance, wait);
+      return;
+    }
+    activate(current + Math.sign(target - current));
+    lastChange = performance.now();
+    if (current !== target) timer = window.setTimeout(advance, MIN_DWELL);
   };
 
   const update = () => {

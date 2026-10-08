@@ -1228,7 +1228,7 @@ html.is-loading .loader {
   position: relative;
   z-index: 1;
   margin-top: calc(187.5 * var(--u));
-  padding-bottom: calc(449 * var(--u));
+  padding-bottom: calc(449 * var(--u) + 30 * var(--vh)); /* + запас, чтобы при быстром скролле успели показаться все */
 }
 
 .services__label {
@@ -1705,7 +1705,7 @@ html.is-loading .loader {
 
   .services__probe { top: calc(100% + 70 * var(--u)); }
 
-  .services__list { margin: calc(8 * var(--u)) 0 calc(-96 * var(--u)); padding-bottom: 0; }
+  .services__list { margin: calc(8 * var(--u)) 0 calc(-96 * var(--u) + 30 * var(--vh)); padding-bottom: 0; }
   .services__label { margin-bottom: calc(20 * var(--u)); font-size: max(14px, calc(16 * var(--u))); }
   .service { font-size: calc(36 * var(--u)); line-height: calc(52 * var(--u)); }
   .services__caption { max-width: none; margin-top: calc(14 * var(--u)); font-size: max(14px, calc(15 * var(--u))); }
