@@ -1198,7 +1198,10 @@ html.is-loading .loader {
 .services__list {
   position: relative;
   z-index: 1;
-  padding-bottom: calc(459 * var(--u));
+  /* Список стартует ниже: картинка с описанием успевает встать на место и прочитаться (первая услуга
+     активна), и только после 40% экрана скролла список доезжает до середины и начинает менять услуги */
+  margin-top: calc(40 * var(--vh) + 217.7 * var(--u));
+  padding-bottom: calc(450 * var(--u));
 }
 
 .services__label {
@@ -1675,7 +1678,7 @@ html.is-loading .loader {
     background: var(--color-text);
   }
 
-  .services__list { margin: calc(8 * var(--u)) 0 calc(-96 * var(--u) + 30 * var(--vh)); padding-bottom: 0; }
+  .services__list { margin: calc(8 * var(--u) + 26 * var(--vh)) 0 calc(15 * var(--vh) - 80 * var(--u)); padding-bottom: 0; }
   .services__label { margin-bottom: calc(20 * var(--u)); font-size: max(14px, calc(16 * var(--u))); }
   .service { font-size: calc(36 * var(--u)); line-height: calc(52 * var(--u)); }
   .services__caption { max-width: none; margin-top: calc(14 * var(--u)); font-size: max(14px, calc(15 * var(--u))); }
