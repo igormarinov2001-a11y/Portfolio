@@ -238,7 +238,6 @@ const createGradient = (canvas, image, animated, getSize) => {
     precision mediump float;
     #endif
     uniform sampler2D u_tex;
-    uniform sampler2D u_vel; // поле скорости от курсора (см. «жидкость за курсором» ниже)
     uniform vec2 u_res;
     uniform float u_aspect;
     uniform float u_time;
@@ -255,9 +254,7 @@ const createGradient = (canvas, image, animated, getSize) => {
         sin(uv.y * 5. + t * 1.1) + 0.5 * sin(uv.y * 9. - t * 0.8),
         cos(uv.x * 4.5 - t * 0.9) + 0.5 * cos(uv.x * 8. + t * 0.7)
       );
-      // Курсор: картинка «тянется» за ним. В текстуре скорость, 128 = ноль
-      vec2 vel = (texture2D(u_vel, uv).rg - 128.0 / 255.0) * (255.0 / 127.0) * 0.3;
-      vec2 c = uv - 0.5 + flow * 0.035 - vel * 1.5;
+      vec2 c = uv - 0.5 + flow * 0.035;
 
       // Дрейф: лёгкий поворот, приближение и сдвиг
       float ang = sin(t * 0.35) * 0.05;
@@ -305,130 +302,6 @@ const createGradient = (canvas, image, animated, getSize) => {
   gl.uniform1i(gl.getUniformLocation(program, 'u_tex'), 0);
   const aspectLoc = gl.getUniformLocation(program, 'u_aspect');
 
-  // ---- Жидкость за курсором (только там, где есть мышь) ----
-  // Идея та же, что на lamalama.com: движение мыши вкладывает в «поле скорости» вектор, который
-  // потом растекается, сносится сам по себе и затухает. Поле маленькое (48×27 клеток) и считается
-  // на процессоре за доли миллисекунды; в видеокарту уходит крошечной текстурой, а шейдер сдвигает
-  // по ней координаты картинки. Код написан заново, чужой не копировался.
-  const FW = 48;
-  const FH = 27;
-  const MAXV = 0.3; // та же константа, что 0.3 в шейдере (доли экрана)
-  const hasMouse = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  let vx = new Float32Array(FW * FH);
-  let vy = new Float32Array(FW * FH);
-  let nx = new Float32Array(FW * FH);
-  let ny = new Float32Array(FW * FH);
-  const fieldBytes = new Uint8Array(FW * FH * 3);
-  let fieldTexture = null;
-  if (hasMouse) {
-    fieldTexture = gl.createTexture();
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, fieldTexture);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    fieldBytes.fill(128);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, FW, FH, 0, gl.RGB, gl.UNSIGNED_BYTE, fieldBytes);
-    gl.activeTexture(gl.TEXTURE0);
-  }
-  gl.uniform1i(gl.getUniformLocation(program, 'u_vel'), 1);
-
-  let pointerX = 0;
-  let pointerY = 0;
-  let pointerSeen = false;
-  let moveX = 0;
-  let moveY = 0;
-  if (hasMouse) {
-    window.addEventListener(
-      'mousemove',
-      (e) => {
-        if (pointerSeen) {
-          moveX += e.clientX - pointerX;
-          moveY += e.clientY - pointerY;
-        }
-        pointerX = e.clientX;
-        pointerY = e.clientY;
-        pointerSeen = true;
-      },
-      { passive: true },
-    );
-  }
-
-  const bilinear = (arr, x, y) => {
-    x = Math.min(FW - 1.001, Math.max(0, x));
-    y = Math.min(FH - 1.001, Math.max(0, y));
-    const x0 = Math.floor(x);
-    const y0 = Math.floor(y);
-    const fx = x - x0;
-    const fy = y - y0;
-    const i = y0 * FW + x0;
-    return (arr[i] * (1 - fx) + arr[i + 1] * fx) * (1 - fy) + (arr[i + FW] * (1 - fx) + arr[i + FW + 1] * fx) * fy;
-  };
-
-  // Один шаг поля: снос по собственной скорости, затухание, новая порция от курсора
-  const stepField = () => {
-    let energy = 0;
-    for (let y = 0; y < FH; y++) {
-      for (let x = 0; x < FW; x++) {
-        const i = y * FW + x;
-        // откуда «прилетела» жидкость: идём назад по скорости (в клетках)
-        const sx = x - vx[i] * FW * 0.3;
-        const sy = y - vy[i] * FW * 0.3;
-        nx[i] = bilinear(vx, sx, sy) * 0.97;
-        ny[i] = bilinear(vy, sx, sy) * 0.97;
-      }
-    }
-    // курсор: гауссово пятно с вектором движения мыши за кадр
-    if (pointerSeen && (moveX || moveY)) {
-      const rect = canvas.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        const u = (pointerX - rect.left) / rect.width;
-        const v = 1 - (pointerY - rect.top) / rect.height;
-        if (u > -0.1 && u < 1.1 && v > -0.1 && v < 1.1) {
-          const dx = (moveX / rect.width) * 5;
-          const dy = (-moveY / rect.height) * 5;
-          const cx = u * (FW - 1);
-          const cy = v * (FH - 1);
-          const R = 7;
-          for (let y = Math.max(0, Math.floor(cy - R)); y <= Math.min(FH - 1, Math.ceil(cy + R)); y++) {
-            for (let x = Math.max(0, Math.floor(cx - R)); x <= Math.min(FW - 1, Math.ceil(cx + R)); x++) {
-              const d2 = (x - cx) * (x - cx) + (y - cy) * (y - cy);
-              const w = Math.exp(-d2 / (2 * 2.6 * 2.6));
-              const i = y * FW + x;
-              nx[i] = Math.max(-MAXV, Math.min(MAXV, nx[i] + w * dx));
-              ny[i] = Math.max(-MAXV, Math.min(MAXV, ny[i] + w * dy));
-            }
-          }
-        }
-      }
-    }
-    moveX = 0;
-    moveY = 0;
-    [vx, nx] = [nx, vx];
-    [vy, ny] = [ny, vy];
-    for (let i = 0; i < FW * FH; i++) {
-      fieldBytes[i * 3] = Math.round(128 + (vx[i] / MAXV) * 127);
-      fieldBytes[i * 3 + 1] = Math.round(128 + (vy[i] / MAXV) * 127);
-      fieldBytes[i * 3 + 2] = 128;
-      energy += Math.abs(vx[i]) + Math.abs(vy[i]);
-    }
-    return energy;
-  };
-  let fieldIdle = true; // поле пустое, текстуру не гоняем
-
-  const updateField = () => {
-    if (!hasMouse) return;
-    const moving = moveX !== 0 || moveY !== 0;
-    if (fieldIdle && !moving) return;
-    const energy = stepField();
-    gl.activeTexture(gl.TEXTURE1);
-    gl.bindTexture(gl.TEXTURE_2D, fieldTexture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, FW, FH, 0, gl.RGB, gl.UNSIGNED_BYTE, fieldBytes);
-    gl.activeTexture(gl.TEXTURE0);
-    fieldIdle = energy < 0.002;
-  };
-
   const updateTexture = () => {
     if (!image.naturalWidth) return;
     const texW = Math.min(1024, image.naturalWidth);
@@ -447,15 +320,12 @@ const createGradient = (canvas, image, animated, getSize) => {
   const phone = window.matchMedia('(max-width: 900px)');
 
   const startedAt = performance.now();
-  const stillTime = /[?&]still\b/.test(window.location.search);
   let active = false;
   let frame = 0;
   let skip = false;
 
   const draw = () => {
-    updateField();
-    // ?still=1 в адресе замораживает собственное течение градиента (для проверки реакции на курсор)
-    gl.uniform1f(timeLoc, stillTime ? 0 : ((performance.now() - startedAt) / 1000) * SPEED);
+    gl.uniform1f(timeLoc, ((performance.now() - startedAt) / 1000) * SPEED);
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   };
 
@@ -864,7 +734,7 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 (() => {
   if (!/[?&]v=/.test(window.location.search)) return;
   const tag = document.createElement('div');
-  tag.textContent = `build: fluid-gradient · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
+  tag.textContent = `build: slides-600 · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
   tag.setAttribute('aria-hidden', 'true');
   tag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:200;padding:3px 7px;border-radius:4px;background:rgba(128,128,128,.55);color:#fff;font:10px/1.2 system-ui,sans-serif;pointer-events:none';
   document.body.appendChild(tag);
