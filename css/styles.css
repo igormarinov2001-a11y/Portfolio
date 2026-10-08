@@ -1127,6 +1127,107 @@ html.is-loading .loader {
 }
 
 
+
+/* ==========================================================================
+   8.3 Блок «Services»: слева картинка и описание выбранной услуги, справа список.
+   Белый фон, те же три линии сетки, что в Works. Отступы сверху и снизу по 180px, левый край
+   25px, список начинается на 970px (размеры макета на 1920).
+   ========================================================================== */
+
+.services {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: calc(770 * var(--u)) 1fr;
+  column-gap: calc(175 * var(--u));
+  padding: calc(180 * var(--u)) var(--gutter);
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+
+/* Левая колонка: картинка 770×613 и описание под ней. Все картинки лежат друг на друге в одной
+   ячейке, видна активная (плавное перетекание). Колонка начинается на уровне первой услуги. */
+.services__media {
+  position: relative;
+  z-index: 2;
+  align-self: start;
+  margin-top: calc(87 * var(--u));
+}
+
+.services__slides,
+.services__captions {
+  display: grid;
+}
+
+.services__slide,
+.services__caption {
+  grid-area: 1 / 1;
+  opacity: 0;
+  transition: opacity 0.45s ease;
+}
+
+.services__slide.is-active,
+.services__caption.is-active {
+  opacity: 1;
+}
+
+.services__slide {
+  width: 100%;
+  aspect-ratio: 770 / 613;
+  object-fit: cover;
+}
+
+.services__caption {
+  max-width: calc(738 * var(--u));
+  margin-top: calc(21 * var(--u));
+  font-size: max(14px, calc(24 * var(--u)));
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+/* Правая колонка: подпись и список услуг. Активная услуга чёрная, остальные серые. */
+.services__list {
+  position: relative;
+  z-index: 2;
+}
+
+.services__label {
+  margin-bottom: calc(39 * var(--u));
+  font-size: calc(24 * var(--u));
+  line-height: 1;
+}
+
+.services__list ul {
+  display: flex;
+  flex-direction: column;
+}
+
+.service {
+  display: block;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #ababab;
+  font: inherit;
+  font-size: calc(72 * var(--u));
+  font-weight: 500;
+  line-height: calc(112.8 * var(--u));
+  letter-spacing: -0.02em;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.service.is-active {
+  color: var(--color-bg);
+}
+
+.service:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 4px;
+}
+
 /* ==========================================================================
    9. Телефон и планшет
    Мобильный макет нарисован на ширине 393px. Размеры записаны в тех же «пикселях макета»
@@ -1548,4 +1649,18 @@ html.is-loading .loader {
   .works__lines span:nth-child(1) { left: calc(9.5 * var(--u)); }
   .works__lines span:nth-child(2) { left: calc(50% - 0.5px); }
   .works__lines span:nth-child(3) { left: auto; right: calc(9.5 * var(--u)); }
+
+  /* Services (черновик: макета под мобилку пока нет) */
+  .services {
+    display: flex;
+    flex-direction: column;
+    padding: calc(90 * var(--u)) var(--gutter) calc(80 * var(--u));
+  }
+
+  .services__list { order: 1; }
+  .services__media { order: 2; margin-top: calc(40 * var(--u)); }
+  .services__label { margin-bottom: calc(20 * var(--u)); font-size: max(14px, calc(16 * var(--u))); }
+  .service { font-size: calc(36 * var(--u)); line-height: calc(52 * var(--u)); }
+  .services__caption { max-width: none; margin-top: calc(14 * var(--u)); font-size: max(14px, calc(15 * var(--u))); }
 }
+

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>The Northlane — Agency</title>
   <meta name="description" content="Senior designers. Fixed process. Pixel-perfect handoff. Brand, product, and web for teams that can't afford average.">
-  <link rel="stylesheet" href="css/styles.css?v=20261008-1333">
+  <link rel="stylesheet" href="css/styles.css?v=20261008-1742">
   <!-- Лоадер показывается только если работает JavaScript; аварийный таймер на случай сбоя -->
   <script>
     document.documentElement.classList.add('is-loading');
@@ -94,7 +94,7 @@
         </div>
       </div>
 
-      <ol class="hero__services" id="services">
+      <ol class="hero__services" id="hero-services">
         <li><span class="num" aria-hidden="true">01</span><span class="dash" aria-hidden="true">-</span>Web Design</li>
         <li><span class="num" aria-hidden="true">02</span><span class="dash" aria-hidden="true">-</span>Brand Identity</li>
         <li><span class="num" aria-hidden="true">03</span><span class="dash" aria-hidden="true">-</span>Mobile App</li>
@@ -193,8 +193,45 @@
       </a>
       </div>
     </section>
+
+    <!-- Services: слева картинка и описание выбранной услуги, справа список. Услуга меняется при
+         наведении (или нажатии). ВРЕМЕННО: картинки и тексты, кроме Web Design, заглушки, их пришлёт дизайнер. -->
+    <section class="services" id="services" data-services>
+      <div class="works__lines" aria-hidden="true"><span></span><span></span><span></span></div>
+
+      <div class="services__media">
+        <div class="services__slides">
+          <img class="services__slide is-active" data-service-slide src="images/services-web.webp" width="770" height="613" alt="Meridian: a logistics website with a ship and the headline “Navigate without noise”">
+          <img class="services__slide" data-service-slide src="images/work-1.webp" width="770" height="613" alt="" loading="lazy">
+          <img class="services__slide" data-service-slide src="images/work-3.webp" width="770" height="613" alt="" loading="lazy">
+          <img class="services__slide" data-service-slide src="images/work-4.webp" width="770" height="613" alt="" loading="lazy">
+          <img class="services__slide" data-service-slide src="images/work-2.webp" width="770" height="613" alt="" loading="lazy">
+          <img class="services__slide" data-service-slide src="images/work-1.webp" width="770" height="613" alt="" loading="lazy">
+        </div>
+        <div class="services__captions">
+          <p class="services__caption is-active" data-service-caption>Crafted modern, user-centered websites with intuitive navigation and a strong visual identity, boosting engagement and strengthening brand presence online</p>
+          <p class="services__caption" data-service-caption>Built distinctive brand systems, from logo and typography to tone of voice, that make teams instantly recognizable and easy to remember</p>
+          <p class="services__caption" data-service-caption>Designed intuitive mobile products with clear flows and polished interactions, from the first sketch to store-ready screens</p>
+          <p class="services__caption" data-service-caption>Turned AI into a creative tool: on-brand visuals, copy and motion produced faster, without losing a human point of view</p>
+          <p class="services__caption" data-service-caption>Reworked existing products around real user behavior, with simpler journeys, cleaner interfaces and better retention</p>
+          <p class="services__caption" data-service-caption>Helped teams find the right problem before the pixels: research, positioning and a clear roadmap for design and growth</p>
+        </div>
+      </div>
+
+      <div class="services__list">
+        <p class="services__label serif">Services</p>
+        <ul>
+          <li><button class="service is-active" type="button" data-service>Web Design</button></li>
+          <li><button class="service" type="button" data-service>Brand Identity</button></li>
+          <li><button class="service" type="button" data-service>Mobile App</button></li>
+          <li><button class="service" type="button" data-service>AI Content</button></li>
+          <li><button class="service" type="button" data-service>Product Redesign</button></li>
+          <li><button class="service" type="button" data-service>Business Consultation</button></li>
+        </ul>
+      </div>
+    </section>
   </main>
 
-  <script src="js/main.js?v=20261008-1333" defer></script>
+  <script src="js/main.js?v=20261008-1742" defer></script>
 </body>
 </html>

@@ -668,6 +668,7 @@ document.querySelectorAll('[data-works]').forEach((section) => {
   const cta = document.querySelector('.header__cta');
   const pin = section.querySelector('.works__pin');
   const stage = section.querySelector('.works__stage');
+  const lightTail = document.querySelector('[data-services]'); // белый блок сразу после Works
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   section.classList.add('works--armed');
@@ -703,16 +704,18 @@ document.querySelectorAll('[data-works]').forEach((section) => {
     if (p >= 0.98) section.classList.add('is-in');
     else if (p < 0.7) section.classList.remove('is-in');
 
+    // Белая зона заканчивается вместе с блоком Services, который идёт сразу за Works
     const bounds = section.getBoundingClientRect();
+    const lightBottom = lightTail ? lightTail.getBoundingClientRect().bottom : bounds.bottom;
     if (cta) {
       const mid = headerHeight / 2 || 40;
       // Кнопка шапки темнеет, только когда заливка полностью белая (то же условие, что и is-in)
-      cta.classList.toggle('is-on-light', section.classList.contains('is-in') && bounds.bottom > mid);
+      cta.classList.toggle('is-on-light', section.classList.contains('is-in') && lightBottom > mid);
     }
 
-    // Шапка под секцией работ: на телефоне инверсия (mix-blend-mode) включается только здесь,
+    // Шапка над белой зоной: на телефоне инверсия (mix-blend-mode) включается только здесь,
     // потому что в остальных местах она дорогая для iPhone и давала рывки при скролле
-    document.documentElement.classList.toggle('is-over-works', bounds.top < headerHeight && bounds.bottom > 0);
+    document.documentElement.classList.toggle('is-over-works', bounds.top < headerHeight && lightBottom > 0);
   };
 
   const update = () => {
@@ -734,8 +737,34 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 (() => {
   if (!/[?&]v=/.test(window.location.search)) return;
   const tag = document.createElement('div');
-  tag.textContent = `build: no-fluid · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
+  tag.textContent = `build: services · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
   tag.setAttribute('aria-hidden', 'true');
   tag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:200;padding:3px 7px;border-radius:4px;background:rgba(128,128,128,.55);color:#fff;font:10px/1.2 system-ui,sans-serif;pointer-events:none';
   document.body.appendChild(tag);
 })();
+
+
+// Блок «Services»: при наведении (или нажатии, на телефоне) на услугу она становится активной
+// (чёрной), а слева меняются картинка и описание. Последняя выбранная остаётся, пока не
+// выберут другую.
+document.querySelectorAll('[data-services]').forEach((section) => {
+  const items = [...section.querySelectorAll('[data-service]')];
+  const slides = [...section.querySelectorAll('[data-service-slide]')];
+  const captions = [...section.querySelectorAll('[data-service-caption]')];
+  let current = Math.max(0, items.findIndex((item) => item.classList.contains('is-active')));
+
+  const activate = (index) => {
+    if (index === current) return;
+    [items, slides, captions].forEach((group) => {
+      group[current]?.classList.remove('is-active');
+      group[index]?.classList.add('is-active');
+    });
+    current = index;
+  };
+
+  items.forEach((item, index) => {
+    item.addEventListener('mouseenter', () => activate(index));
+    item.addEventListener('focus', () => activate(index));
+    item.addEventListener('click', () => activate(index));
+  });
+});
