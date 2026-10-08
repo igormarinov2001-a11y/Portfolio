@@ -1135,14 +1135,26 @@ html.is-loading .loader {
    ========================================================================== */
 
 .services {
+  --step: calc(40 * var(--vh)); /* сколько скролла отдаётся одной услуге */
   position: relative;
   z-index: 1;
+  height: calc(100 * var(--vh) + 6 * var(--step));
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+
+/* Сцена прилипает к верху экрана, когда картинка оказывается ровно по центру по вертикали, и
+   стоит на месте, пока скроллом переключаются услуги. */
+.services__stage {
+  position: sticky;
+  top: 0;
+  height: calc(100 * var(--vh));
   display: grid;
   grid-template-columns: calc(770 * var(--u)) 1fr;
   column-gap: calc(175 * var(--u));
-  padding: calc(180 * var(--u)) var(--gutter);
-  background: var(--color-text);
-  color: var(--color-bg);
+  align-content: start;
+  /* центр картинки (613/2) = центр экрана; подпись «Services» на 87px выше картинки */
+  padding: calc(50 * var(--vh) - 306.5 * var(--u) - 87 * var(--u)) var(--gutter) 0;
 }
 
 /* Левая колонка: картинка 770×613 и описание под ней. Все картинки лежат друг на друге в одной
@@ -1162,13 +1174,33 @@ html.is-loading .loader {
 .services__slide,
 .services__caption {
   grid-area: 1 / 1;
-  opacity: 0;
-  transition: opacity 0.45s ease;
 }
 
-.services__slide.is-active,
+/* Описание просто перетекает, а картинка закрывает предыдущую заливкой снизу вверх,
+   как на кнопках при наведении (та же кривая). */
+.services__caption {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
 .services__caption.is-active {
   opacity: 1;
+  transition-delay: 0.2s;
+}
+
+.services__slide {
+  clip-path: inset(100% 0 0 0);
+}
+
+.services__slide.is-prev {
+  z-index: 1;
+  clip-path: inset(0);
+}
+
+.services__slide.is-active {
+  z-index: 2;
+  clip-path: inset(0);
+  transition: clip-path 0.6s cubic-bezier(0.65, 0, 0.35, 1);
 }
 
 .services__slide {
@@ -1651,10 +1683,11 @@ html.is-loading .loader {
   .works__lines span:nth-child(3) { left: auto; right: calc(9.5 * var(--u)); }
 
   /* Services (черновик: макета под мобилку пока нет) */
-  .services {
+  .services__stage {
     display: flex;
     flex-direction: column;
-    padding: calc(90 * var(--u)) var(--gutter) calc(80 * var(--u));
+    justify-content: center;
+    padding: calc(60 * var(--u)) var(--gutter);
   }
 
   .services__list { order: 1; }
