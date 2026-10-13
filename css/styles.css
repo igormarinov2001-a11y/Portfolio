@@ -1368,7 +1368,7 @@ html.is-loading .loader {
     bottom: calc(env(safe-area-inset-bottom, 0px) + 6 * var(--u)); /* почти вплотную к нижней безопасной зоне */
     display: flex;
     flex-direction: column;
-    gap: calc(6 * var(--u)); /* шаг ~25px; нажимаемая область каждой ссылки больше самой надписи, см. ::after */
+    gap: calc(9.5 * var(--u)); /* шаг ~28.5px; нажимаемая область каждой ссылки больше самой надписи, см. ::after */
     opacity: 0;
     transform: translateY(calc(12 * var(--u)));
     transition: opacity 0.12s ease, transform 0.12s ease;
