@@ -70,12 +70,15 @@ if (scrollTimelines) {
   const percent = loader.querySelector('[data-loader-percent]');
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const MIN_MS = reduceMotion ? 600 : 1800; // минимум, за сколько счётчик дойдёт до 100%
+  const MAX_MS = 6000; // максимум: если что-то грузится слишком долго, лоадер всё равно уходит
   const HOLD_MS = 250; // пауза на 100% перед уходом
   const DIVE_MS = reduceMotion ? 0 : 800; // надписи ныряют под линию, линия сворачивается (как в CSS)
   const EXIT_MS = reduceMotion ? 400 : 900; // потом экран уезжает вверх (как в CSS)
 
-  // Что считаем «загруженным»: шрифты + все картинки на странице
-  const images = [...document.images];
+  // Что считаем «загруженным»: шрифты и картинки первого экрана (слайдшоу хиро и градиент).
+  // Картинки ниже по странице (loading="lazy") не ждём: браузер грузит их, когда до них
+  // близко скроллить, и раньше именно они не давали счётчику дойти до 100%.
+  const images = [...document.images].filter((img) => img.loading !== 'lazy' && img.closest('.hero, .reveal'));
   const total = images.length + 1;
   let loaded = 0;
   const done = () => { loaded += 1; };
@@ -102,6 +105,11 @@ if (scrollTimelines) {
         setTimeout(() => {
           root.classList.remove('is-loading'); // лоадер скрыт, скролл снова работает
           loader.remove();
+          // Теперь, когда первый экран показан, спокойно подгружаем остальные картинки в фоне,
+          // чтобы они были готовы к моменту, когда до них доскроллят
+          setTimeout(() => {
+            document.querySelectorAll('img[loading="lazy"]').forEach((img) => { img.loading = 'eager'; });
+          }, 600);
         }, EXIT_MS);
       }, DIVE_MS);
     }, HOLD_MS);
@@ -109,7 +117,7 @@ if (scrollTimelines) {
 
   const tick = (now) => {
     const byTime = 1 - Math.pow(1 - Math.min(1, (now - start) / MIN_MS), 3); // быстро в начале, медленно в конце
-    const byLoad = loaded / total;
+    const byLoad = now - start > MAX_MS ? 1 : loaded / total;
     const p = Math.min(byTime, byLoad);
     loader.style.setProperty('--p', p.toFixed(4));
     percent.textContent = `${Math.round(p * 100)}%`;
@@ -738,7 +746,7 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 (() => {
   if (!/[?&]v=/.test(window.location.search)) return;
   const tag = document.createElement('div');
-  tag.textContent = `build: header-menu · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
+  tag.textContent = `build: loader-fix · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
   tag.setAttribute('aria-hidden', 'true');
   tag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:200;padding:3px 7px;border-radius:4px;background:rgba(128,128,128,.55);color:#fff;font:10px/1.2 system-ui,sans-serif;pointer-events:none';
   document.body.appendChild(tag);
@@ -755,6 +763,16 @@ document.querySelectorAll('[data-services]').forEach((section) => {
   const slides = [...section.querySelectorAll('[data-service-slide]')];
   const captions = [...section.querySelectorAll('[data-service-caption]')];
   const media = section.querySelector('.services__media');
+
+  // Картинки услуг ленивые, но меняются мгновенно, поэтому, когда блок уже близко, грузим все сразу
+  if ('IntersectionObserver' in window) {
+    const preload = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return;
+      slides.forEach((slide) => { slide.loading = 'eager'; });
+      preload.disconnect();
+    }, { rootMargin: '2500px 0px' });
+    preload.observe(section);
+  }
   const label = section.querySelector('.services__label');
   const header = document.querySelector('.header');
   const mobile = window.matchMedia('(max-width: 900px)');

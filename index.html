@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>The Northlane — Agency</title>
   <meta name="description" content="Senior designers. Fixed process. Pixel-perfect handoff. Brand, product, and web for teams that can't afford average.">
-  <link rel="stylesheet" href="css/styles.css?v=20261013-1738">
+  <link rel="preload" href="fonts/uncut-sans-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/uncut-sans-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="css/styles.css?v=20261013-1800">
   <!-- Лоадер показывается только если работает JavaScript; аварийный таймер на случай сбоя -->
   <script>
     document.documentElement.classList.add('is-loading');
@@ -73,13 +75,13 @@
           <span class="hero__the serif">The</span>
           <span class="hero__word">Northlane</span>
           <span class="hero__slides" data-slideshow data-interval="600">
-            <img class="is-active" src="images/hero-1.png" width="396" height="232" alt="">
-            <img src="images/hero-2.png" width="396" height="232" alt="">
-            <img src="images/hero-3.png" width="396" height="232" alt="">
-            <img src="images/hero-4.png" width="396" height="232" alt="">
-            <img src="images/hero-5.png" width="396" height="232" alt="">
-            <img src="images/hero-6.png" width="396" height="232" alt="">
-            <img src="images/hero-7.png" width="396" height="232" alt="">
+            <img class="is-active" src="images/hero-1.webp" width="396" height="232" alt="" fetchpriority="high">
+            <img src="images/hero-2.webp" width="396" height="232" alt="">
+            <img src="images/hero-3.webp" width="396" height="232" alt="">
+            <img src="images/hero-4.webp" width="396" height="232" alt="">
+            <img src="images/hero-5.webp" width="396" height="232" alt="">
+            <img src="images/hero-6.webp" width="396" height="232" alt="">
+            <img src="images/hero-7.webp" width="396" height="232" alt="">
           </span>
           <span class="hero__word">Agency</span>
         </h1>
@@ -162,19 +164,19 @@
 
       <div class="works__grid">
         <article class="work">
-          <img src="images/work-1.webp" width="927" height="644" alt="Nectar, a skincare online store, shown on a laptop">
+          <img src="images/work-1.webp" width="927" height="644" alt="Nectar, a skincare online store, shown on a laptop" loading="lazy" decoding="async">
           <div class="work__strip" aria-hidden="true" data-marquee="View case study|2026"></div>
         </article>
         <article class="work">
-          <img src="images/work-2.webp" width="927" height="644" alt="Void, an architecture studio website, shown on a phone lying on leather">
+          <img src="images/work-2.webp" width="927" height="644" alt="Void, an architecture studio website, shown on a phone lying on leather" loading="lazy" decoding="async">
           <div class="work__strip" aria-hidden="true" data-marquee="View case study|2026"></div>
         </article>
         <article class="work">
-          <img src="images/work-3.webp" width="927" height="644" alt="A health tracking mobile app shown on a phone">
+          <img src="images/work-3.webp" width="927" height="644" alt="A health tracking mobile app shown on a phone" loading="lazy" decoding="async">
           <div class="work__strip" aria-hidden="true" data-marquee="View case study|2026"></div>
         </article>
         <article class="work">
-          <img src="images/work-4.webp" width="927" height="644" alt="Ease, a wellbeing dashboard, shown on a laptop">
+          <img src="images/work-4.webp" width="927" height="644" alt="Ease, a wellbeing dashboard, shown on a laptop" loading="lazy" decoding="async">
           <div class="work__strip" aria-hidden="true" data-marquee="View case study|2026"></div>
         </article>
       </div>
@@ -196,12 +198,12 @@
       <div class="services__stage">
       <div class="services__media">
         <div class="services__slides">
-          <img class="services__slide is-active" data-service-slide src="images/services-web.webp" width="770" height="613" alt="Meridian: a logistics website with a ship and the headline “Navigate without noise”">
-          <img class="services__slide" data-service-slide src="images/services-brand.webp" width="770" height="613" alt="Nectar: brand identity with logo, packaging, signage, typography and social posts" loading="lazy">
-          <img class="services__slide" data-service-slide src="images/services-mobile.webp" width="770" height="613" alt="Pulse: a health mobile app with an appointment booking screen" loading="lazy">
-          <img class="services__slide" data-service-slide src="images/work-4.webp" width="770" height="613" alt="" loading="lazy">
-          <img class="services__slide" data-service-slide src="images/work-2.webp" width="770" height="613" alt="" loading="lazy">
-          <img class="services__slide" data-service-slide src="images/work-1.webp" width="770" height="613" alt="" loading="lazy">
+          <img class="services__slide is-active" data-service-slide src="images/services-web.webp" width="770" height="613" loading="lazy" decoding="async" alt="Meridian: a logistics website with a ship and the headline “Navigate without noise”">
+          <img class="services__slide" data-service-slide src="images/services-brand.webp" width="770" height="613" alt="Nectar: brand identity with logo, packaging, signage, typography and social posts" loading="lazy" decoding="async">
+          <img class="services__slide" data-service-slide src="images/services-mobile.webp" width="770" height="613" alt="Pulse: a health mobile app with an appointment booking screen" loading="lazy" decoding="async">
+          <img class="services__slide" data-service-slide src="images/work-4.webp" width="770" height="613" alt="" loading="lazy" decoding="async">
+          <img class="services__slide" data-service-slide src="images/work-2.webp" width="770" height="613" alt="" loading="lazy" decoding="async">
+          <img class="services__slide" data-service-slide src="images/work-1.webp" width="770" height="613" alt="" loading="lazy" decoding="async">
         </div>
         <div class="services__captions">
           <p class="services__caption is-active" data-service-caption>Crafted modern, user-centered websites with intuitive navigation and a strong visual identity, boosting engagement and strengthening brand presence online</p>
@@ -228,6 +230,6 @@
     </section>
   </main>
 
-  <script src="js/main.js?v=20261013-1738" defer></script>
+  <script src="js/main.js?v=20261013-1800" defer></script>
 </body>
 </html>
