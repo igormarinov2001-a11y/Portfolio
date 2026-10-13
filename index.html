@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>The Northlane — Agency</title>
   <meta name="description" content="Senior designers. Fixed process. Pixel-perfect handoff. Brand, product, and web for teams that can't afford average.">
-  <link rel="stylesheet" href="css/styles.css?v=20261008-1837">
+  <link rel="stylesheet" href="css/styles.css?v=20261013-1641">
   <!-- Лоадер показывается только если работает JavaScript; аварийный таймер на случай сбоя -->
   <script>
     document.documentElement.classList.add('is-loading');
@@ -49,16 +49,17 @@
       </ul>
     </nav>
 
-    <!-- Бургер: виден только на телефоне -->
+    <!-- Бургер: на десктопе две длинные линии, при наведении рядом появляется «Menu»; на телефоне три короткие -->
     <button class="burger" type="button" aria-label="Open menu" aria-expanded="false" data-burger>
       <span></span><span></span><span></span>
+      <em class="burger__label" aria-hidden="true">Menu</em>
     </button>
   </header>
 
     <!-- Кнопка шапки вынесена из <header> и закреплена отдельно: на неё не действует инверсия
          текста (у кнопки синий ховер, который при инверсии на белом стал бы жёлтым) -->
     <a class="btn btn--light header__cta" href="#contact">
-      Book a call
+      <span class="header__cta-text">Book a call</span>
       <svg class="btn__arrow" width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
         <path d="M2 12 12 2M4 2h8v8" stroke="currentColor"/>
       </svg>
@@ -94,13 +95,6 @@
         </div>
       </div>
 
-      <ol class="hero__services" id="hero-services">
-        <li><span class="num" aria-hidden="true">01</span><span class="dash" aria-hidden="true">-</span>Web Design</li>
-        <li><span class="num" aria-hidden="true">02</span><span class="dash" aria-hidden="true">-</span>Brand Identity</li>
-        <li><span class="num" aria-hidden="true">03</span><span class="dash" aria-hidden="true">-</span>Mobile App</li>
-        <li><span class="num" aria-hidden="true">04</span><span class="dash" aria-hidden="true">-</span>AI Content</li>
-        <li><span class="num" aria-hidden="true">05</span><span class="dash" aria-hidden="true">-</span>Product Redesign</li>
-      </ol>
 
       <p class="hero__tagline">
         <span class="line"><strong>Senior designers. Fixed process.</strong></span>
@@ -234,6 +228,6 @@
     </section>
   </main>
 
-  <script src="js/main.js?v=20261008-1837" defer></script>
+  <script src="js/main.js?v=20261013-1641" defer></script>
 </body>
 </html>

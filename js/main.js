@@ -123,7 +123,7 @@ if (scrollTimelines) {
 // Анимация пунктов меню: при наведении буквы по очереди «прокатываются» вверх.
 // Скрипт режет текст ссылки на буквы и рисует каждую дважды (оригинал и копия снизу);
 // сама анимация — в css/styles.css, раздел «Меню: прокатывание букв».
-document.querySelectorAll('.nav__list a').forEach((link) => {
+document.querySelectorAll('.nav__list a, .header__cta-text').forEach((link) => {
   const label = link.textContent.replace(/\s+/g, ' ').trim();
   const roll = document.createElement('span');
   roll.className = 'roll';
@@ -151,13 +151,13 @@ document.querySelectorAll('.nav__list a').forEach((link) => {
     }
   });
 
-  link.setAttribute('aria-label', label); // экранные читалки читают целое слово, а не буквы
+  (link.closest('a') || link).setAttribute('aria-label', label); // экранные читалки читают целое слово, а не буквы
   link.replaceChildren(roll);
 });
 
 
 // Мобильное меню: бургер открывает и закрывает меню на весь экран (класс is-menu-open на <html>).
-// Закрывается по ссылке в меню, по Esc и при переходе на широкий экран.
+// Закрывается по ссылке в меню и по Esc.
 document.querySelectorAll('[data-burger]').forEach((burger) => {
   const root = document.documentElement;
   let closingTimer = 0;
@@ -175,12 +175,13 @@ document.querySelectorAll('[data-burger]').forEach((burger) => {
     root.classList.toggle('is-menu-open', open);
     burger.setAttribute('aria-expanded', String(open));
     burger.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    const text = burger.querySelector('.burger__label');
+    if (text) text.textContent = open ? 'Close' : 'Menu';
   };
 
   burger.addEventListener('click', () => setOpen(!root.classList.contains('is-menu-open')));
   document.querySelectorAll('.nav a').forEach((link) => link.addEventListener('click', () => setOpen(false)));
   document.addEventListener('keydown', (e) => e.key === 'Escape' && setOpen(false));
-  window.matchMedia('(min-width: 901px)').addEventListener('change', (e) => e.matches && setOpen(false));
 });
 
 
@@ -737,7 +738,7 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 (() => {
   if (!/[?&]v=/.test(window.location.search)) return;
   const tag = document.createElement('div');
-  tag.textContent = `build: services-ref2 · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
+  tag.textContent = `build: header-menu · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
   tag.setAttribute('aria-hidden', 'true');
   tag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:200;padding:3px 7px;border-radius:4px;background:rgba(128,128,128,.55);color:#fff;font:10px/1.2 system-ui,sans-serif;pointer-events:none';
   document.body.appendChild(tag);

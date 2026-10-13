@@ -449,12 +449,14 @@ html.is-loading .loader {
 }
 
 @media (hover: hover) {
-  .nav__list a:hover .roll__char {
+  .nav__list a:hover .roll__char,
+  .header__cta:hover .roll__char {
     transform: translateY(-1.2em);
   }
 }
 
-.nav__list a:focus-visible .roll__char {
+.nav__list a:focus-visible .roll__char,
+.header__cta:focus-visible .roll__char {
   transform: translateY(-1.2em);
 }
 
@@ -534,7 +536,7 @@ html.is-loading .loader {
 /* Маленькое «THE» над названием */
 .hero__the {
   margin-bottom: calc(18 * var(--u));
-  font-size: max(22px, calc(34 * var(--u)));
+  font-size: max(22px, calc(31 * var(--u)));
   line-height: calc(24 * var(--u));
 }
 
@@ -571,29 +573,6 @@ html.is-loading .loader {
   display: flex;
   gap: calc(8 * var(--u));
   margin-top: calc(46 * var(--u));
-}
-
-/* Список услуг — внизу слева */
-.hero__services {
-  position: absolute;
-  left: var(--gutter);
-  bottom: calc(22 * var(--u));
-  display: flex;
-  flex-direction: column;
-  gap: calc(8 * var(--u));
-}
-
-.hero__services li {
-  display: grid;
-  grid-template-columns: calc(40 * var(--u)) calc(26 * var(--u)) auto;
-}
-
-.hero__services .num {
-  color: var(--color-muted);
-}
-
-.hero__services .dash {
-  color: var(--color-muted-dash);
 }
 
 /* Описание — внизу справа */
@@ -1255,6 +1234,10 @@ html.is-loading .loader {
   display: none;
 }
 
+.burger__label {
+  display: none;
+}
+
 /* Цвет текста шапки на белой секции при открытии/закрытии меню (см. раздел «Телефон и планшет») */
 @keyframes header-text-open {
   from,
@@ -1523,10 +1506,6 @@ html.is-loading .loader {
     margin-top: calc(48 * var(--u));
   }
 
-  .hero__services {
-    display: none;
-  }
-
   .hero__tagline {
     right: auto;
     left: var(--gutter);
@@ -1682,4 +1661,228 @@ html.is-loading .loader {
   .services__label { margin-bottom: calc(20 * var(--u)); font-size: max(14px, calc(16 * var(--u))); }
   .service { font-size: calc(36 * var(--u)); line-height: calc(52 * var(--u)); }
   .services__caption { max-width: none; margin-top: calc(14 * var(--u)); font-size: max(14px, calc(15 * var(--u))); }
+}
+
+
+/* ==========================================================================
+   Десктоп: шапка и меню
+   Слева логотип, по центру («через» центральную линию сетки) длинный бургер из двух линий, при
+   наведении рядом появляется «Menu». Справа текстовая кнопка «Book a call» с тем же эффектом
+   наведения, что у пунктов меню (буквы прокатываются). Открытое меню на десктопе пока временное
+   (то же синее меню, что на телефоне), макет придёт позже.
+   ========================================================================== */
+
+@media (min-width: 901px) {
+  /* Главная кнопка хиро в новом макете синяя, при наведении заливается белым */
+  .hero__actions .btn--light {
+    --btn-fill: var(--color-text);
+    --btn-hover-color: var(--color-bg);
+    background: var(--color-accent);
+    color: var(--color-text);
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    min-height: calc(64 * var(--u)); /* текст шапки по центру на 32px, как в макете */
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .burger {
+    position: absolute;
+    left: calc(50% + 7 * var(--u));
+    top: 50%;
+    z-index: 1;
+    display: block;
+    width: calc(126 * var(--u));
+    height: calc(12 * var(--u));
+    margin-top: calc(-6 * var(--u));
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .burger::after { /* область нажатия: линии и слово «Menu» */
+    content: "";
+    position: absolute;
+    inset: -16px calc(-90 * var(--u)) -16px -12px;
+  }
+
+  .burger span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: currentColor;
+    opacity: 0.76; /* линии чуть темнее текста: #c2c2c2 на макете */
+  }
+
+  .burger span:nth-child(1) { top: 0; }
+  .burger span:nth-child(2) { bottom: 0; }
+  .burger span:nth-child(3) { display: none; }
+
+  .logo {
+    font-size: max(13px, calc(15.5 * var(--u)));
+  }
+
+  .burger__label {
+    position: absolute;
+    left: calc(149 * var(--u));
+    top: calc(50% - 0.5 * var(--u));
+    display: block;
+    font-size: max(13px, calc(15.5 * var(--u)));
+    font-style: normal;
+    font-weight: 600;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+    opacity: 0;
+    transform: translate(calc(-8 * var(--u)), -50%);
+    transition: opacity 0.3s ease, transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  .burger:hover .burger__label,
+  .burger:focus-visible .burger__label,
+  html.is-menu-open .burger__label {
+    opacity: 1;
+    transform: translate(0, -50%);
+  }
+
+  .burger:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 8px;
+  }
+
+  /* Кнопка «Book a call» — текст со стрелкой, без рамки и заливки; инверсия, как у шапки */
+  .header__cta {
+    top: calc(22.5 * var(--u));
+    gap: calc(15 * var(--u));
+    height: calc(20 * var(--u));
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text);
+    font-size: max(13px, calc(15.5 * var(--u)));
+    font-weight: 600;
+    text-transform: uppercase;
+    mix-blend-mode: difference;
+    overflow: visible;
+    transition: none;
+  }
+
+  .header__cta::before {
+    display: none;
+  }
+
+  .header__cta .btn__arrow {
+    width: calc(14 * var(--u));
+    height: calc(14 * var(--u));
+  }
+
+  .header__cta.is-on-light {
+    background: none;
+    color: var(--color-text);
+  }
+
+  html.is-media-under-header .header__cta {
+    mix-blend-mode: normal;
+  }
+
+  /* Временное меню на весь экран: тот же синий занавес и пункты, что на телефоне */
+  .nav {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    display: flex;
+    align-items: center;
+    padding: calc(40 * var(--u)) var(--gutter) 0;
+    visibility: hidden;
+    transition: visibility 0s linear 0.6s;
+  }
+
+  .nav::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: var(--color-accent);
+    transform: scaleY(0);
+    transform-origin: 50% 100%;
+    transition: transform 0.55s cubic-bezier(0.76, 0, 0.24, 1);
+  }
+
+  html.is-menu-open {
+    overflow: hidden;
+  }
+
+  html.is-menu-open .nav {
+    visibility: visible;
+    transition: none;
+  }
+
+  html.is-menu-open .nav::before {
+    transform: scaleY(1);
+    transform-origin: 50% 0;
+  }
+
+  html.is-menu-open .header,
+  html.is-menu-open .header__cta,
+  html.is-menu-closing .header,
+  html.is-menu-closing .header__cta {
+    mix-blend-mode: normal;
+  }
+
+  html.is-over-works.is-menu-open .header,
+  html.is-over-works.is-menu-open .header__cta {
+    animation: header-text-open 0.2s step-end;
+  }
+
+  html.is-over-works.is-menu-closing:not(.is-menu-open) .header,
+  html.is-over-works.is-menu-closing:not(.is-menu-open) .header__cta {
+    animation: header-text-close 0.7s step-end;
+  }
+
+  .nav__list {
+    position: relative;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .nav__list a {
+    display: block;
+    font-size: calc(72 * var(--u));
+    line-height: calc(96 * var(--u));
+    letter-spacing: 0;
+    transform: translateY(105%);
+    transition: transform 0.25s ease;
+  }
+
+  .nav__list li {
+    overflow: hidden;
+  }
+
+  .nav__list li:nth-child(1) { --i: 0; }
+  .nav__list li:nth-child(2) { --i: 1; }
+  .nav__list li:nth-child(3) { --i: 2; }
+  .nav__list li:nth-child(4) { --i: 3; }
+  .nav__list li:nth-child(5) { --i: 4; }
+
+  html.is-menu-open .nav__list a {
+    transform: none;
+    transition: transform 0.75s cubic-bezier(0.22, 0.61, 0.36, 1) calc(0.3s + var(--i, 0) * 0.07s);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav__list a,
+    html.is-menu-open .nav__list a,
+    .nav::before {
+      transform: none;
+      transition: none;
+    }
+
+    .nav::before { opacity: 0; }
+    html.is-menu-open .nav::before { opacity: 1; }
+  }
 }
