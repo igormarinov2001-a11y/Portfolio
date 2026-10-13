@@ -1727,7 +1727,7 @@ html.is-loading .loader {
     display: block;
     font-size: max(13px, calc(15.5 * var(--u)));
     font-style: normal;
-    font-weight: 600;
+    font-weight: 500;
     line-height: 1;
     text-transform: uppercase;
     white-space: nowrap;
@@ -1758,7 +1758,7 @@ html.is-loading .loader {
     background: none;
     color: var(--color-text);
     font-size: max(13px, calc(15.5 * var(--u)));
-    font-weight: 600;
+    font-weight: 500;
     text-transform: uppercase;
     mix-blend-mode: difference;
     overflow: visible;
