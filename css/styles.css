@@ -1772,12 +1772,22 @@ html.is-loading .loader {
     transition: transform 0.25s ease;
   }
 
+  /* Соцсети появляются, когда синяя панель уже опустилась (задержка), а при закрытии исчезают сразу */
   .nav__social {
     position: absolute;
     left: calc(50% + 8 * var(--u));
     bottom: calc(22 * var(--u));
     display: flex;
     gap: calc(25 * var(--u));
+    opacity: 0;
+    transform: translateY(calc(12 * var(--u)));
+    transition: opacity 0.12s ease, transform 0.12s ease;
+  }
+
+  html.is-menu-open .nav__social {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.5s ease 0.55s, transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) 0.55s;
   }
 
   .nav__social a {
@@ -1807,6 +1817,8 @@ html.is-loading .loader {
   @media (prefers-reduced-motion: reduce) {
     .nav__list a,
     html.is-menu-open .nav__list a,
+    .nav__social,
+    html.is-menu-open .nav__social,
     .nav::before {
       transform: none;
       transition: none;
