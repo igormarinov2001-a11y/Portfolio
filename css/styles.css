@@ -1673,14 +1673,6 @@ html.is-loading .loader {
    ========================================================================== */
 
 @media (min-width: 901px) {
-  /* Главная кнопка хиро в новом макете синяя, при наведении заливается белым */
-  .hero__actions .btn--light {
-    --btn-fill: var(--color-text);
-    --btn-hover-color: var(--color-bg);
-    background: var(--color-accent);
-    color: var(--color-text);
-  }
-
   .header {
     display: flex;
     align-items: center;
@@ -1715,9 +1707,8 @@ html.is-loading .loader {
     position: absolute;
     left: 0;
     width: 100%;
-    height: 2px;
+    height: 1.3px;
     background: currentColor;
-    opacity: 0.76; /* линии чуть темнее текста: #c2c2c2 на макете */
   }
 
   .burger span:nth-child(1) { top: 0; }
@@ -1759,7 +1750,7 @@ html.is-loading .loader {
   /* Кнопка «Book a call» — текст со стрелкой, без рамки и заливки; инверсия, как у шапки */
   .header__cta {
     top: calc(22.5 * var(--u));
-    gap: calc(15 * var(--u));
+    gap: calc(8 * var(--u));
     height: calc(20 * var(--u));
     padding: 0;
     border: 0;
