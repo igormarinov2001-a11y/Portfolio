@@ -4,6 +4,14 @@
 
 @font-face {
   font-family: "Uncut Sans";
+  src: url("../fonts/uncut-sans-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Uncut Sans";
   src: url("../fonts/uncut-sans-latin-500-normal.woff2") format("woff2");
   font-weight: 500;
   font-style: normal;
@@ -1688,8 +1696,8 @@ html.is-loading .loader {
     z-index: 1;
     display: block;
     width: calc(148 * var(--u));
-    height: calc(7.3 * var(--u)); /* две линии по 1.3px, между центрами 6px */
-    margin-top: calc(-3.65 * var(--u));
+    height: calc(6 * var(--u) + 2px); /* две линии, между центрами 6px */
+    margin-top: calc(-3 * var(--u) - 1px);
     padding: 0;
     border: 0;
     background: none;
@@ -1708,8 +1716,9 @@ html.is-loading .loader {
     position: absolute;
     left: 0;
     width: 100%;
-    height: 1.3px;
+    height: 2px;
     background: currentColor;
+    transform: scaleY(0.65); /* визуальная толщина 1.3px; через масштаб обе линии выглядят одинаково на любом экране, а не округляются по-разному */
   }
 
   .burger span:nth-child(1) { top: 0; }
@@ -1727,7 +1736,7 @@ html.is-loading .loader {
     display: block;
     font-size: max(13px, calc(15.5 * var(--u)));
     font-style: normal;
-    font-weight: 500;
+    font-weight: 400;
     line-height: 1;
     text-transform: uppercase;
     white-space: nowrap;
@@ -1758,7 +1767,7 @@ html.is-loading .loader {
     background: none;
     color: var(--color-text);
     font-size: max(13px, calc(15.5 * var(--u)));
-    font-weight: 500;
+    font-weight: 400;
     text-transform: uppercase;
     mix-blend-mode: difference;
     overflow: visible;
