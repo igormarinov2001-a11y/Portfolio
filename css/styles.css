@@ -1254,6 +1254,10 @@ html.is-loading .loader {
   display: none;
 }
 
+.nav__social {
+  display: none;
+}
+
 /* Цвет текста шапки на белой секции при открытии/закрытии меню (см. раздел «Телефон и планшет») */
 @keyframes header-text-open {
   from,
@@ -1804,16 +1808,33 @@ html.is-loading .loader {
     mix-blend-mode: normal;
   }
 
-  /* Временное меню на весь экран: тот же синий занавес и пункты, что на телефоне */
+  /* Меню: синяя панель сверху высотой 729px (макет 1920×1080), ниже страница затемнена.
+     Пункты справа от центральной линии, соцсети внизу панели. Клик по затемнению закрывает меню. */
   .nav {
     position: fixed;
-    inset: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: calc(729 * var(--u));
     z-index: -1;
-    display: flex;
-    align-items: center;
-    padding: calc(40 * var(--u)) var(--gutter) 0;
     visibility: hidden;
     transition: visibility 0s linear 0.6s;
+  }
+
+  .nav::after { /* затемнение страницы под панелью */
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    height: 100vh;
+    background: rgb(11 11 11 / 0.64);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+  }
+
+  html.is-menu-open .nav::after {
+    opacity: 1;
   }
 
   .nav::before {
@@ -1858,18 +1879,43 @@ html.is-loading .loader {
   }
 
   .nav__list {
-    position: relative;
+    position: absolute;
+    left: calc(50% + 8 * var(--u));
+    top: calc(98 * var(--u));
     flex-direction: column;
     gap: 0;
   }
 
   .nav__list a {
     display: block;
-    font-size: calc(72 * var(--u));
-    line-height: calc(96 * var(--u));
-    letter-spacing: 0;
+    font-size: calc(65 * var(--u));
+    font-weight: 700; /* толщина штриха в макете 10px: это Bold; ширины слов подобраны перебором */
+    line-height: calc(82 * var(--u)); /* шаг 82px между пунктами */
+    letter-spacing: -0.01em;
     transform: translateY(105%);
     transition: transform 0.25s ease;
+  }
+
+  .nav__social {
+    position: absolute;
+    left: calc(50% + 8 * var(--u));
+    bottom: calc(22 * var(--u));
+    display: flex;
+    gap: calc(25 * var(--u));
+  }
+
+  .nav__social a {
+    display: block;
+    font-size: max(13px, calc(16 * var(--u)));
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    transition: opacity 0.2s ease;
+  }
+
+  .nav__social a:hover {
+    opacity: 0.65;
   }
 
   .nav__list li {

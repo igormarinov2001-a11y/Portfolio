@@ -189,6 +189,11 @@ document.querySelectorAll('[data-burger]').forEach((burger) => {
 
   burger.addEventListener('click', () => setOpen(!root.classList.contains('is-menu-open')));
   document.querySelectorAll('.nav a').forEach((link) => link.addEventListener('click', () => setOpen(false)));
+  // Клик по затемнению под панелью меню закрывает его (на десктопе панель ниже экрана не доходит)
+  const nav = document.querySelector('.nav');
+  if (nav) nav.addEventListener('click', (e) => {
+    if (e.target === nav && e.clientY > nav.getBoundingClientRect().bottom) setOpen(false);
+  });
   document.addEventListener('keydown', (e) => e.key === 'Escape' && setOpen(false));
 });
 
@@ -746,7 +751,7 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 (() => {
   if (!/[?&]v=/.test(window.location.search)) return;
   const tag = document.createElement('div');
-  tag.textContent = `build: loader-fix · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
+  tag.textContent = `build: menu-panel · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
   tag.setAttribute('aria-hidden', 'true');
   tag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:200;padding:3px 7px;border-radius:4px;background:rgba(128,128,128,.55);color:#fff;font:10px/1.2 system-ui,sans-serif;pointer-events:none';
   document.body.appendChild(tag);
