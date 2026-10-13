@@ -1736,7 +1736,7 @@ html.is-loading .loader {
     display: block;
     font-size: max(13px, calc(15.5 * var(--u)));
     font-style: normal;
-    font-weight: 400;
+    font-weight: 500; /* как у логотипа */
     letter-spacing: 0.01em; /* то же, что у «Book a call» */
     font-kerning: none; /* у «Book a call» буквы стоят по отдельности (прокатка), поэтому без кернинга */
     line-height: 1;
@@ -1769,7 +1769,7 @@ html.is-loading .loader {
     background: none;
     color: var(--color-text);
     font-size: max(13px, calc(15.5 * var(--u)));
-    font-weight: 400;
+    font-weight: 500; /* как у логотипа */
     letter-spacing: 0.01em;
     font-kerning: none;
     text-transform: uppercase;
