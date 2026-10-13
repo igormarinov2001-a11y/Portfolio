@@ -131,7 +131,7 @@ if (scrollTimelines) {
 // Анимация пунктов меню: при наведении буквы по очереди «прокатываются» вверх.
 // Скрипт режет текст ссылки на буквы и рисует каждую дважды (оригинал и копия снизу);
 // сама анимация — в css/styles.css, раздел «Меню: прокатывание букв».
-document.querySelectorAll('.nav__list a, .header__cta-text').forEach((link) => {
+document.querySelectorAll('.nav__list a, .nav__social a, .header__cta-text').forEach((link) => {
   const label = link.textContent.replace(/\s+/g, ' ').trim();
   const roll = document.createElement('span');
   roll.className = 'roll';
@@ -751,7 +751,7 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 (() => {
   if (!/[?&]v=/.test(window.location.search)) return;
   const tag = document.createElement('div');
-  tag.textContent = `build: menu-panel · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
+  tag.textContent = `build: social-hover · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
   tag.setAttribute('aria-hidden', 'true');
   tag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:200;padding:3px 7px;border-radius:4px;background:rgba(128,128,128,.55);color:#fff;font:10px/1.2 system-ui,sans-serif;pointer-events:none';
   document.body.appendChild(tag);

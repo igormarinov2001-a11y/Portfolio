@@ -466,12 +466,14 @@ html.is-loading .loader {
 
 @media (hover: hover) {
   .nav__list a:hover .roll__char,
+  .nav__social a:hover .roll__char,
   .header__cta:hover .roll__char {
     transform: translateY(-1.2em);
   }
 }
 
 .nav__list a:focus-visible .roll__char,
+.nav__social a:focus-visible .roll__char,
 .header__cta:focus-visible .roll__char {
   transform: translateY(-1.2em);
 }
@@ -1911,11 +1913,6 @@ html.is-loading .loader {
     letter-spacing: 0.01em;
     line-height: 1.2;
     text-transform: uppercase;
-    transition: opacity 0.2s ease;
-  }
-
-  .nav__social a:hover {
-    opacity: 0.65;
   }
 
   .nav__list li {
