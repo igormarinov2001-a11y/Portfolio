@@ -26,6 +26,14 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "Uncut Sans";
+  src: url("../fonts/uncut-sans-latin-700-normal.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ВРЕМЕННО: пока нет файлов Nyght Serif, курсив рисуется Libre Caslon Text (бесплатный, лицензия
    OFL): из бесплатных он ближе всего к Nyght по весу и контрасту. Когда файл Nyght появится в
    папке fonts/ — раскомментировать блок ниже (имя файла поправить под своё) и убрать
@@ -793,7 +801,7 @@ html.is-loading .loader {
 .about__lead {
   margin: 0;
   font-size: calc(72 * var(--u));
-  font-weight: 500;
+  font-weight: 700;
   line-height: calc(80 * var(--u));
   letter-spacing: -0.02em;
 }
