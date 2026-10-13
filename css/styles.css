@@ -1687,13 +1687,14 @@ html.is-loading .loader {
     top: 50%;
     z-index: 1;
     display: block;
-    width: calc(126 * var(--u));
-    height: calc(12 * var(--u));
-    margin-top: calc(-6 * var(--u));
+    width: calc(148 * var(--u));
+    height: calc(7.3 * var(--u)); /* две линии по 1.3px, между центрами 6px */
+    margin-top: calc(-3.65 * var(--u));
     padding: 0;
     border: 0;
     background: none;
     color: inherit;
+    font: inherit; /* кнопки не наследуют шрифт сами: без этого «Menu» рисовалось системным */
     cursor: pointer;
   }
 
@@ -1721,8 +1722,8 @@ html.is-loading .loader {
 
   .burger__label {
     position: absolute;
-    left: calc(149 * var(--u));
-    top: calc(50% - 0.5 * var(--u));
+    left: calc(171 * var(--u));
+    top: 50%;
     display: block;
     font-size: max(13px, calc(15.5 * var(--u)));
     font-style: normal;
