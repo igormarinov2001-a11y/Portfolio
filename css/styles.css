@@ -1291,8 +1291,8 @@ html.is-loading .loader {
     inset: 0;
     z-index: -1;
     display: flex;
-    align-items: center; /* список по центру экрана, как в макете */
-    padding: calc(var(--top-inset) + 12 * var(--u)) var(--gutter) 0;
+    align-items: flex-start; /* список начинается на 44px ниже шапки (шапка 56px + отступ сверху экрана) */
+    padding: calc(var(--top-inset) + 56 * var(--u) + 34.5 * var(--u)) var(--gutter) 0;
     visibility: hidden;
     transition: visibility 0s linear 0.6s; /* прячем после того, как синяя шторка ушла */
   }
@@ -1357,7 +1357,7 @@ html.is-loading .loader {
     display: block;
     font-size: calc(44 * var(--u));
     font-weight: 700;
-    line-height: calc(64 * var(--u)); /* шаг 64px между пунктами */
+    line-height: calc(55.5 * var(--u)); /* шаг как на десктопе, в тех же пропорциях к размеру (82 к 65) */
     letter-spacing: -0.01em;
   }
 
@@ -1365,10 +1365,10 @@ html.is-loading .loader {
   .nav__social {
     position: absolute;
     left: var(--gutter);
-    bottom: calc(64 * var(--u));
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 6 * var(--u)); /* почти вплотную к нижней безопасной зоне */
     display: flex;
     flex-direction: column;
-    gap: calc(12.8 * var(--u));
+    gap: calc(6 * var(--u)); /* шаг ~25px; нажимаемая область каждой ссылки больше самой надписи, см. ::after */
     opacity: 0;
     transform: translateY(calc(12 * var(--u)));
     transition: opacity 0.12s ease, transform 0.12s ease;
@@ -1381,12 +1381,19 @@ html.is-loading .loader {
   }
 
   .nav__social a {
+    position: relative;
     display: block;
     font-size: calc(16 * var(--u));
     font-weight: 500;
     letter-spacing: 0.01em;
     line-height: 1.2;
     text-transform: uppercase;
+  }
+
+  .nav__social a::after { /* область нажатия шире надписи: на 3px выше и ниже, до соседней ссылки не доходит */
+    content: "";
+    position: absolute;
+    inset: -3px -8px;
   }
 
   /* Открытие меню: после шторки пункты по очереди выезжают снизу из-под своей строки (строка
