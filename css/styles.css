@@ -493,10 +493,6 @@ html.is-loading .loader {
 
   .work img,
   .work__strip,
-  .works--armed .works__label,
-.works--armed .works__tag,
-  .works--armed .work,
-  .works--armed .works__more,
   .header {
     transition: none !important;
   }
@@ -846,94 +842,26 @@ html.is-loading .loader {
 
 
 /* ==========================================================================
-   8.2 Блок «Selected Works»: сетка проектов 2×2 и кнопка
-   Отступы по краям 25px, зазоры между картинками 16px, сверху и снизу по 180px.
+   8.2 Блок «Selected Works»: сетка проектов (2, 1 на всю ширину, 2) и кнопка, тёмный фон
+   Отступы по краям 25px, зазоры между картинками 6px.
    ========================================================================== */
 
 .works {
-  --fill-distance: calc(60 * var(--vh)); /* сколько нужно проскроллить, чтобы колонки залились белым */
   position: relative;
   z-index: 1;
-  isolation: isolate;
 }
 
-/* Порядок такой: 1) секция заезжает и занимает весь экран (пока тёмная);
-   2) сцена закрепляется (sticky) и, пока вы скролите ещё --fill-distance, четыре колонки
-   заливаются белым; 3) когда заливка закончилась, появляются подпись, работы и кнопка. */
-.works__pin {
-  position: relative;
-  height: calc(100 * var(--vh) + var(--fill-distance));
-}
-
-.works__stage {
-  position: sticky;
-  top: var(--top-inset);
-  height: calc(100 * var(--vh));
-  overflow: hidden;
-}
-
-/* Содержимое секции: белый фон у него только когда работает скрипт (works--armed) */
 .works__body {
   position: relative;
-  padding: calc(189 * var(--u)) var(--gutter) calc(180 * var(--u));
+  padding: calc(188 * var(--u)) var(--gutter) calc(180 * var(--u));
 }
 
-.works--armed .works__body {
-  background: var(--color-text);
-}
-
-/* Белая заливка. Четыре колонки (между линиями сетки) растут слева направо одновременно:
-   каждая начинается от левого края или от своей линии. Прогресс --f (0…1) считает js/main.js. */
-.works__fill,
+/* Линии сетки на светлом фоне (их использует блок Services): тонкие, тёмные с прозрачностью 12% */
 .works__lines {
   position: absolute;
   inset: 0;
-  pointer-events: none;
-}
-
-.works__fill {
-  z-index: 0;
-}
-
-.works__fill span {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: calc(25% + 1px); /* +1px: колонки слегка перекрываются, шва между ними не будет */
-  background: var(--color-text);
-  transform: scaleX(var(--f, 0));
-  transform-origin: left center;
-  will-change: transform;
-}
-
-/* Режим scroll-анимации (класс works--css ставит js/main.js): колонки заливаются в браузере по
-   скроллу, на видеокарте, без скрипта на каждом кадре. Кривая та же, что была у скрипта
-   (быстро в начале, к концу медленнее). --pin-top считает js/main.js. */
-.works--css .works__fill span {
-  transform: none;
-  animation: works-fill 1s cubic-bezier(0.5, 1, 0.89, 1) both;
-  animation-timeline: scroll(root);
-  animation-range: var(--pin-top, 0px) calc(var(--pin-top, 0px) + var(--fill-distance));
-}
-
-@keyframes works-fill {
-  from {
-    transform: scaleX(0);
-  }
-  to {
-    transform: scaleX(1);
-  }
-}
-
-.works__fill span:nth-child(1) { left: 0; }
-.works__fill span:nth-child(2) { left: 25%; }
-.works__fill span:nth-child(3) { left: 50%; }
-.works__fill span:nth-child(4) { left: 75%; }
-
-/* Линии сетки поверх заливки: тонкие (1px), тёмные с прозрачностью 12%, поэтому на тёмном
-   фоне не видны, а на белом проступают лёгкими серыми линиями */
-.works__lines {
   z-index: 1;
+  pointer-events: none;
 }
 
 .works__lines span {
@@ -948,15 +876,6 @@ html.is-loading .loader {
 .works__lines span:nth-child(2) { left: calc(50% - 1px); }
 .works__lines span:nth-child(3) { left: calc(75% - 1px); }
 
-.works__head,
-.works__label,
-.works__tag,
-.works__grid,
-.works__more {
-  position: relative;
-  z-index: 2;
-}
-
 /* Заголовок слева и подпись «Digital Design» справа */
 .works__head {
   display: flex;
@@ -969,57 +888,21 @@ html.is-loading .loader {
   line-height: 1;
 }
 
-/* Когда скрипт работает (works--armed): фон белый, подпись и кнопка тёмные, а подпись,
-   карточки и кнопка скрыты и появляются, когда заливка закончилась (is-in). */
-.works--armed .works__label,
-.works--armed .works__tag {
-  color: var(--color-bg);
-}
-
-.works--armed .works__more {
-  --btn-fill: var(--color-accent);
-  --btn-hover-color: var(--color-text);
-  background: var(--color-bg);
-  color: var(--color-text);
-}
-
-.works--armed .works__label,
-.works--armed .works__tag,
-.works--armed .work,
-.works--armed .works__more {
-  opacity: 0;
-  transform: translateY(calc(24 * var(--u)));
-  transition: opacity 0.6s cubic-bezier(0.22, 0.61, 0.36, 1), transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-
-.works--armed .works__more {
-  transition: opacity 0.6s cubic-bezier(0.22, 0.61, 0.36, 1), transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1), color 0.08s linear 0.12s;
-}
-
-.works--armed.is-in .works__label,
-.works--armed.is-in .works__tag,
-.works--armed.is-in .work,
-.works--armed.is-in .works__more {
-  opacity: 1;
-  transform: none;
-}
-
-/* Карточки появляются по очереди, кнопка последней */
-.works--armed .work:nth-child(2) { transition-delay: 0.08s; }
-.works--armed .work:nth-child(3) { transition-delay: 0.16s; }
-.works--armed .work:nth-child(4) { transition-delay: 0.24s; }
-.works--armed .works__more { transition-delay: 0.36s, 0.36s, 0.12s; }
-
 .works__label {
   margin-bottom: calc(14 * var(--u));
   font-size: calc(24 * var(--u));
   line-height: 1;
 }
 
+/* Сетка: две карточки в ряд, потом одна на всю ширину, потом снова две. Зазор 6px. */
 .works__grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: calc(8 * var(--u));
+  gap: calc(6 * var(--u));
+}
+
+.work--wide {
+  grid-column: 1 / -1;
 }
 
 .work {
@@ -1031,7 +914,7 @@ html.is-loading .loader {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 1862 / 1288;
+  aspect-ratio: 932 / 803;
   object-fit: cover;
   transition: transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
@@ -1100,6 +983,10 @@ html.is-loading .loader {
   to {
     transform: translateX(-50%);
   }
+}
+
+.work--wide img {
+  aspect-ratio: 1870 / 1285;
 }
 
 @media (hover: hover) {
@@ -1601,8 +1488,8 @@ html.is-loading .loader {
     padding-bottom: calc(16 * var(--u));
   }
 
-  /* Works: белая секция, четыре карточки друг под другом (371px, зазор 4px), линии сетки
-     светло-серые 2px, заголовок слева и «Digital Design» справа */
+  /* Works (черновик, макета под мобилку пока нет): тёмная секция, карточки друг под другом
+     (зазор 3px), заголовок слева и «Digital Design» справа */
   .works__body {
     padding: calc(159 * var(--u)) 0 calc(80 * var(--u));
   }
@@ -1626,11 +1513,8 @@ html.is-loading .loader {
     line-height: 1;
   }
 
-  .works--armed .works__tag {
-    color: var(--color-bg);
-  }
-
-  .work img {
+  .work img,
+  .work--wide img {
     aspect-ratio: 927 / 644;
   }
 
@@ -1640,24 +1524,14 @@ html.is-loading .loader {
     padding: 0 calc(10 * var(--u));
   }
 
-  /* На телефоне порядок работ другой: 3 и 4 меняются местами */
-  .work:nth-child(3) { order: 4; }
-  .work:nth-child(4) { order: 3; }
-
   .works__more {
     margin-top: calc(44 * var(--u));
   }
 
-  /* Заливка: две колонки (до центральной линии и после неё) вместо четырёх */
-  .works__fill span:nth-child(1) { left: 0; width: calc(50% + 1px); }
-  .works__fill span:nth-child(2) { left: 50%; width: 50%; }
-  .works__fill span:nth-child(3),
-  .works__fill span:nth-child(4) { display: none; }
-
-  /* Линии на белом: 1px (2px на телефоне казались толстыми), чуть темнее, чтобы не пропали */
+  /* Линии на белом (блок Services): 1px, чуть темнее, чтобы не пропали */
   .works__lines span {
     width: 1px;
-    background: rgb(11 11 11 / 0.09); /* на белом около #eaeaea, на тёмном не видно */
+    background: rgb(11 11 11 / 0.09);
   }
 
   .works__lines span:nth-child(1) { left: calc(9.5 * var(--u)); }

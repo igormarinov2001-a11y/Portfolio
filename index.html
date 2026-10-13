@@ -7,7 +7,7 @@
   <meta name="description" content="Senior designers. Fixed process. Pixel-perfect handoff. Brand, product, and web for teams that can't afford average.">
   <link rel="preload" href="fonts/uncut-sans-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="fonts/uncut-sans-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="css/styles.css?v=20261013-1826">
+  <link rel="stylesheet" href="css/styles.css?v=20261013-1831">
   <!-- Лоадер показывается только если работает JavaScript; аварийный таймер на случай сбоя -->
   <script>
     document.documentElement.classList.add('is-loading');
@@ -150,43 +150,35 @@
       </p>
     </section>
 
-    <section class="works" data-works>
-      <!-- Сцена: на весь экран, закрепляется при скролле, пока четыре колонки между линиями
-           сетки заливаются белым слева направо (одновременно) -->
-      <div class="works__pin">
-        <div class="works__stage">
-          <div class="works__fill" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-          <div class="works__lines" aria-hidden="true"><span></span><span></span><span></span></div>
+    <section class="works" id="works">
+      <div class="works__body">
+        <div class="works__head">
+          <p class="works__label serif">Selected Works</p>
+          <p class="works__tag">Digital Design</p>
         </div>
-      </div>
 
-      <!-- Содержимое: появляется, когда заливка закончилась -->
-      <div class="works__body" id="works">
-        <div class="works__lines" aria-hidden="true"><span></span><span></span><span></span></div>
-
-      <div class="works__head">
-        <p class="works__label serif">Selected Works</p>
-        <p class="works__tag">Digital Design</p>
-      </div>
-
-      <div class="works__grid">
-        <article class="work">
-          <img src="images/work-1.webp" width="927" height="644" alt="Nectar, a skincare online store, shown on a laptop" loading="lazy" decoding="async">
-          <div class="work__strip" aria-hidden="true" data-marquee="View case study|2026"></div>
-        </article>
-        <article class="work">
-          <img src="images/work-2.webp" width="927" height="644" alt="Void, an architecture studio website, shown on a phone lying on leather" loading="lazy" decoding="async">
-          <div class="work__strip" aria-hidden="true" data-marquee="View case study|2026"></div>
-        </article>
-        <article class="work">
-          <img src="images/work-3.webp" width="927" height="644" alt="A health tracking mobile app shown on a phone" loading="lazy" decoding="async">
-          <div class="work__strip" aria-hidden="true" data-marquee="View case study|2026"></div>
-        </article>
-        <article class="work">
-          <img src="images/work-4.webp" width="927" height="644" alt="Ease, a wellbeing dashboard, shown on a laptop" loading="lazy" decoding="async">
-          <div class="work__strip" aria-hidden="true" data-marquee="View case study|2026"></div>
-        </article>
-      </div>
+        <div class="works__grid">
+          <article class="work">
+            <img src="images/work-1.webp" width="927" height="644" alt="Nectar, a skincare online store, shown on a laptop" loading="lazy" decoding="async">
+            <div class="work__strip" aria-hidden="true" data-marquee="View case study|2026"></div>
+          </article>
+          <article class="work">
+            <img src="images/work-5.webp" width="577" height="497" alt="Meridian, a logistics tracking app, shown on a phone resting on a rock" loading="lazy" decoding="async">
+            <div class="work__strip" aria-hidden="true" data-marquee="View case study|2026"></div>
+          </article>
+          <article class="work work--wide">
+            <img src="images/work-2.webp" width="927" height="644" alt="Void, an architecture studio website, shown on a phone held in a hand" loading="lazy" decoding="async">
+            <div class="work__strip" aria-hidden="true" data-marquee="View case study|2026"></div>
+          </article>
+          <article class="work">
+            <img src="images/work-3.webp" width="927" height="644" alt="A health tracking mobile app shown on a phone" loading="lazy" decoding="async">
+            <div class="work__strip" aria-hidden="true" data-marquee="View case study|2026"></div>
+          </article>
+          <article class="work">
+            <img src="images/work-4.webp" width="927" height="644" alt="Ease, a wellbeing dashboard, shown on a laptop" loading="lazy" decoding="async">
+            <div class="work__strip" aria-hidden="true" data-marquee="View case study|2026"></div>
+          </article>
+        </div>
 
       <a class="btn btn--light works__more" href="#works">
         View all works
@@ -237,6 +229,6 @@
     </section>
   </main>
 
-  <script src="js/main.js?v=20261013-1826" defer></script>
+  <script src="js/main.js?v=20261013-1831" defer></script>
 </body>
 </html>

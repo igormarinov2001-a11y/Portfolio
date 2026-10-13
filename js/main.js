@@ -671,65 +671,18 @@ document.querySelectorAll('[data-marquee]').forEach((el) => {
 });
 
 
-// Секция работ. Сначала секция занимает весь экран (тёмная), потом закрепляется и, пока вы
-// скролите, четыре колонки (между линиями сетки) заливаются белым слева направо одновременно,
-// потом появляются подпись, работы и кнопка.
-// --f (0…1) — прогресс заливки; is-in — заливка закончилась, показываем контент.
-// Когда заливка стала полностью белой, кнопка шапки становится тёмной (is-on-light), чтобы не
-// пропасть на белом (текст шапки инвертируется сам, см. mix-blend-mode в CSS).
-document.querySelectorAll('[data-works]').forEach((section) => {
+// Светлый блок Services идёт на тёмной странице. Пока он под шапкой, ставим html.is-over-works:
+// на телефоне инверсия шапки (mix-blend-mode) включается только здесь, потому что в остальных
+// местах она дорогая для iPhone и давала рывки при скролле (на десктопе шапка инвертируется всегда).
+document.querySelectorAll('[data-services]').forEach((section) => {
   const header = document.querySelector('.header');
-  const cta = document.querySelector('.header__cta');
-  const pin = section.querySelector('.works__pin');
-  const stage = section.querySelector('.works__stage');
-  const lightTail = document.querySelector('[data-services]'); // белый блок сразу после Works
-  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  section.classList.add('works--armed');
-
-  // Заливка колонок: если браузер умеет scroll-анимации, её ведёт CSS (класс works--css), по
-  // скроллу, на видеокарте. Скрипт только сообщает, где в документе начинается закреплённая
-  // часть (--pin-top). Без анимаций (и при «уменьшении движения») считает скрипт (--f).
-  const cssFill = scrollTimelines && !reduceMotion;
-  const measurePin = () => {
-    section.style.setProperty('--pin-top', `${(pin.getBoundingClientRect().top + window.scrollY + jitter()).toFixed(2)}px`);
-  };
-  if (cssFill) {
-    section.classList.add('works--css');
-    measurePin();
-    // Верх секции сдвигается, когда выше меняется высота (шрифты, картинки): пересчитываем
-    remeasureTasks.push(measurePin);
-  }
-
   let frame = null;
   let headerHeight = header ? header.offsetHeight : 0; // читаем один раз, обновляем при resize
 
   const render = () => {
     frame = null;
-    const distance = Math.max(1, pin.offsetHeight - stage.offsetHeight); // длина закреплённой части
-    const rect = pin.getBoundingClientRect();
-    let p = Math.min(1, Math.max(0, -rect.top / distance)); // 0, пока сцена не дошла до верха экрана
-    if (reduceMotion) p = p >= 0.5 ? 1 : 0; // без плавной заливки, сразу белый
-    const eased = 1 - (1 - p) * (1 - p); // в начале быстрее, к концу замедляется
-
-    if (!cssFill) section.style.setProperty('--f', eased.toFixed(4));
-
-    // Работы и кнопка появляются, когда заливка закончилась (с запасом, чтобы не мигало)
-    if (p >= 0.98) section.classList.add('is-in');
-    else if (p < 0.7) section.classList.remove('is-in');
-
-    // Белая зона заканчивается вместе с блоком Services, который идёт сразу за Works
-    const bounds = section.getBoundingClientRect();
-    const lightBottom = lightTail ? lightTail.getBoundingClientRect().bottom : bounds.bottom;
-    if (cta) {
-      const mid = headerHeight / 2 || 40;
-      // Кнопка шапки темнеет, только когда заливка полностью белая (то же условие, что и is-in)
-      cta.classList.toggle('is-on-light', section.classList.contains('is-in') && lightBottom > mid);
-    }
-
-    // Шапка над белой зоной: на телефоне инверсия (mix-blend-mode) включается только здесь,
-    // потому что в остальных местах она дорогая для iPhone и давала рывки при скролле
-    document.documentElement.classList.toggle('is-over-works', bounds.top < headerHeight && lightBottom > 0);
+    const rect = section.getBoundingClientRect();
+    document.documentElement.classList.toggle('is-over-works', rect.top < headerHeight && rect.bottom > 0);
   };
 
   const update = () => {
@@ -751,7 +704,7 @@ document.querySelectorAll('[data-works]').forEach((section) => {
 (() => {
   if (!/[?&]v=/.test(window.location.search)) return;
   const tag = document.createElement('div');
-  tag.textContent = `build: social-hover · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
+  tag.textContent = `build: works-dark · ${document.querySelector('.reveal--css') ? 'css' : 'js'}${/[?&]nogl\b/.test(window.location.search) ? ' · nogl' : ''}`;
   tag.setAttribute('aria-hidden', 'true');
   tag.style.cssText = 'position:fixed;left:8px;bottom:8px;z-index:200;padding:3px 7px;border-radius:4px;background:rgba(128,128,128,.55);color:#fff;font:10px/1.2 system-ui,sans-serif;pointer-events:none';
   document.body.appendChild(tag);
