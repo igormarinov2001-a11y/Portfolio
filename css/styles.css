@@ -1368,7 +1368,7 @@ html.is-loading .loader {
   .nav__social {
     position: absolute;
     left: var(--gutter);
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 6 * var(--u)); /* почти вплотную к нижней безопасной зоне */
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 6 * var(--u) + 20 * var(--u) + 26 * var(--u)); /* над кнопкой «Book a call» (20px) с зазором 26px */
     display: flex;
     flex-direction: column;
     gap: calc(9.5 * var(--u)); /* шаг ~28.5px; нажимаемая область каждой ссылки больше самой надписи, см. ::after */
@@ -1384,13 +1384,13 @@ html.is-loading .loader {
   }
 
   /* «Book a call» в меню: текстовая кнопка со стрелкой, как в шапке на десктопе (без заливки и рамки),
-     над соцсетями слева; появляется и исчезает вместе с ними */
+     под соцсетями слева; появляется и исчезает вместе с ними */
   .nav__cta {
     position: absolute;
     left: var(--gutter);
     display: inline-flex;
     align-items: center;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 6 * var(--u) + 105 * var(--u) + 26 * var(--u));
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 6 * var(--u)); /* самый нижний элемент, вплотную к безопасной зоне */
     gap: calc(8 * var(--u));
     height: calc(20 * var(--u));
     padding: 0;
