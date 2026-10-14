@@ -1143,7 +1143,8 @@ html.is-loading .loader {
   display: none;
 }
 
-.nav__social {
+.nav__social,
+.nav__cta {
   display: none;
 }
 
@@ -1378,6 +1379,27 @@ html.is-loading .loader {
     opacity: 1;
     transform: none;
     transition: opacity 0.5s ease 0.55s, transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) 0.55s;
+  }
+
+  /* Кнопка «Book a call»: на всю ширину, над соцсетями, в зоне большого пальца. Белая, как главная
+     кнопка хиро; появляется и исчезает вместе с соцсетями. */
+  .nav__cta {
+    position: absolute;
+    left: var(--gutter);
+    right: var(--gutter);
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 6 * var(--u) + 105 * var(--u) + 28 * var(--u));
+    display: flex;
+    justify-content: center;
+    height: calc(48 * var(--u));
+    opacity: 0;
+    transform: translateY(calc(12 * var(--u)));
+    transition: opacity 0.12s ease, transform 0.12s ease, color 0.08s linear 0.12s;
+  }
+
+  html.is-menu-open .nav__cta {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.5s ease 0.55s, transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) 0.55s, color 0.08s linear 0.12s;
   }
 
   .nav__social a {
