@@ -467,6 +467,7 @@ html.is-loading .loader {
 @media (hover: hover) {
   .nav__list a:hover .roll__char,
   .nav__social a:hover .roll__char,
+  .nav__cta:hover .roll__char,
   .header__cta:hover .roll__char {
     transform: translateY(-1.2em);
   }
@@ -474,6 +475,7 @@ html.is-loading .loader {
 
 .nav__list a:focus-visible .roll__char,
 .nav__social a:focus-visible .roll__char,
+.nav__cta:focus-visible .roll__char,
 .header__cta:focus-visible .roll__char {
   transform: translateY(-1.2em);
 }
@@ -1381,25 +1383,44 @@ html.is-loading .loader {
     transition: opacity 0.5s ease 0.55s, transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) 0.55s;
   }
 
-  /* Кнопка «Book a call»: на всю ширину, над соцсетями, в зоне большого пальца. Белая, как главная
-     кнопка хиро; появляется и исчезает вместе с соцсетями. */
+  /* «Book a call» в меню: текстовая кнопка со стрелкой, как в шапке на десктопе (без заливки и рамки),
+     над соцсетями слева; появляется и исчезает вместе с ними */
   .nav__cta {
     position: absolute;
     left: var(--gutter);
-    right: var(--gutter);
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 6 * var(--u) + 105 * var(--u) + 28 * var(--u));
-    display: flex;
-    justify-content: center;
-    height: calc(48 * var(--u));
+    display: inline-flex;
+    align-items: center;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 6 * var(--u) + 105 * var(--u) + 26 * var(--u));
+    gap: calc(8 * var(--u));
+    height: calc(20 * var(--u));
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-text);
+    font-size: calc(16 * var(--u));
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    font-kerning: none;
+    text-transform: uppercase;
+    overflow: visible;
     opacity: 0;
     transform: translateY(calc(12 * var(--u)));
-    transition: opacity 0.12s ease, transform 0.12s ease, color 0.08s linear 0.12s;
+    transition: opacity 0.12s ease, transform 0.12s ease;
+  }
+
+  .nav__cta::before {
+    display: none;
+  }
+
+  .nav__cta .btn__arrow {
+    width: calc(14 * var(--u));
+    height: calc(14 * var(--u));
   }
 
   html.is-menu-open .nav__cta {
     opacity: 1;
     transform: none;
-    transition: opacity 0.5s ease 0.55s, transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) 0.55s, color 0.08s linear 0.12s;
+    transition: opacity 0.5s ease 0.55s, transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) 0.55s;
   }
 
   .nav__social a {
@@ -1461,9 +1482,9 @@ html.is-loading .loader {
     font-size: 0.9em;
   }
 
-  /* Стрелки на телефоне толще: на тонком экране штрих 1.3px читался слабо */
+  /* Стрелки на телефоне той же толщины, что и текст кнопок (Medium 15–16px ≈ 1.3px) */
   .btn__arrow path {
-    stroke-width: 2.2;
+    stroke-width: 1.5;
   }
 
   /* Первый экран */

@@ -131,7 +131,7 @@ if (scrollTimelines) {
 // Анимация пунктов меню: при наведении буквы по очереди «прокатываются» вверх.
 // Скрипт режет текст ссылки на буквы и рисует каждую дважды (оригинал и копия снизу);
 // сама анимация — в css/styles.css, раздел «Меню: прокатывание букв».
-document.querySelectorAll('.nav__list a, .nav__social a, .header__cta-text').forEach((link) => {
+document.querySelectorAll('.nav__list a, .nav__social a, .header__cta-text, .nav__cta-text').forEach((link) => {
   const label = link.textContent.replace(/\s+/g, ' ').trim();
   const roll = document.createElement('span');
   roll.className = 'roll';
