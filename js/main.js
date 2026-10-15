@@ -643,6 +643,113 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
 });
 
 
+// Подписи карточек Works (название и теги) подстраивают цвет под картинку под ними. Инверсия
+// (mix-blend-mode: difference) на средне-серых местах давала серый текст на сером и текст
+// сливался, поэтому цвет считаем сами: берём яркость картинки в том месте, где сейчас стоит
+// подпись (она едет по карточке при скролле), и выбираем белый или почти чёрный, смотря у кого
+// выше контраст (WCAG). Чтобы цвет не дёргался на границе, переключаем с запасом (гистерезис).
+(() => {
+  const cards = [...document.querySelectorAll('.work')].map((card) => {
+    const img = card.querySelector('img');
+    const inks = [...card.querySelectorAll('.work__name, .work__tags')].map((el) => ({ el, dark: false }));
+    return { card, img, inks, map: null };
+  });
+  if (!cards.length) return;
+
+  const LIGHT = '#fff';
+  const DARK = '#0b0b0b';
+  const SIZE = 96; // ширина карты яркости: хватает, чтобы усреднить фон под текстом
+
+  const lin = (v) => {
+    const c = v / 255;
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  };
+
+  const buildMap = (item) => {
+    const { img } = item;
+    if (!img.naturalWidth) return;
+    const w = SIZE;
+    const h = Math.max(1, Math.round((SIZE * img.naturalHeight) / img.naturalWidth));
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
+    try {
+      ctx.drawImage(img, 0, 0, w, h);
+      const px = ctx.getImageData(0, 0, w, h).data;
+      const lum = new Float32Array(w * h);
+      for (let i = 0; i < w * h; i += 1) {
+        lum[i] = 0.2126 * lin(px[i * 4]) + 0.7152 * lin(px[i * 4 + 1]) + 0.0722 * lin(px[i * 4 + 2]);
+      }
+      item.map = { w, h, lum };
+    } catch (e) {
+      item.map = null; // картинка с другого домена: оставляем белый текст с тенью
+    }
+  };
+
+  // Средняя яркость картинки под прямоугольником (в координатах окна)
+  const lumUnder = (item, rect) => {
+    const { map, card, img } = item;
+    const box = card.getBoundingClientRect();
+    const s = Math.max(box.width / img.naturalWidth, box.height / img.naturalHeight); // object-fit: cover
+    const ox = (box.width - img.naturalWidth * s) / 2;
+    const oy = (box.height - img.naturalHeight * s) / 2;
+    const k = map.w / img.naturalWidth;
+    const pad = 10;
+    const x0 = Math.max(0, Math.floor(((rect.left - pad - box.left - ox) / s) * k));
+    const x1 = Math.min(map.w, Math.ceil(((rect.right + pad - box.left - ox) / s) * k));
+    const y0 = Math.max(0, Math.floor(((rect.top - pad - box.top - oy) / s) * k));
+    const y1 = Math.min(map.h, Math.ceil(((rect.bottom + pad - box.top - oy) / s) * k));
+    let sum = 0;
+    let n = 0;
+    for (let y = y0; y < y1; y += 1) {
+      for (let x = x0; x < x1; x += 1) {
+        sum += map.lum[y * map.w + x];
+        n += 1;
+      }
+    }
+    return n ? sum / n : null;
+  };
+
+  let frame = 0;
+  const render = () => {
+    frame = 0;
+    const vh = window.innerHeight;
+    cards.forEach((item) => {
+      const box = item.card.getBoundingClientRect();
+      if (box.bottom < -50 || box.top > vh + 50) return; // карточка не на экране
+      if (!item.map) buildMap(item);
+      if (!item.map) return;
+      item.inks.forEach((ink) => {
+        const L = lumUnder(item, ink.el.getBoundingClientRect());
+        if (L === null) return;
+        const white = 1.05 / (L + 0.05); // контраст белого текста с фоном
+        const dark = (L + 0.05) / (0.0033 + 0.05); // контраст #0b0b0b с фоном
+        let next = ink.dark;
+        if (ink.dark && white > dark * 1.12) next = false;
+        else if (!ink.dark && dark > white * 1.12) next = true;
+        if (next === ink.dark && ink.el.style.getPropertyValue('--ink')) return;
+        ink.dark = next;
+        ink.el.style.setProperty('--ink', next ? DARK : LIGHT);
+        ink.el.style.setProperty('--ink-shadow', next ? '0 0 14px rgb(255 255 255 / 0.3)' : '0 0 14px rgb(0 0 0 / 0.35)');
+      });
+    });
+  };
+
+  const update = () => {
+    if (!frame) frame = requestAnimationFrame(render);
+  };
+
+  cards.forEach((item) => {
+    if (item.img.complete) update();
+    else item.img.addEventListener('load', update, { once: true });
+  });
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  update();
+})();
+
+
 // Светлый блок Services идёт на тёмной странице. Пока он под шапкой, ставим html.is-over-works:
 // на телефоне инверсия шапки (mix-blend-mode) включается только здесь, потому что в остальных
 // местах она дорогая для iPhone и давала рывки при скролле (на десктопе шапка инвертируется всегда).

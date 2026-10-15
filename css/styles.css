@@ -924,14 +924,14 @@ html.is-loading .loader {
 
 @media (hover: hover) {
   .work:hover img {
-    transform: scale(1.05);
+    transform: scale(1.025);
   }
 }
 
 /* Подпись карточки: название слева, теги справа. В покое она на середине карточки; когда карточка
    проезжает через середину экрана, подпись «прилипает» к нему (sticky) и дальше уезжает вниз
-   относительно карточки до отступа 20px от нижнего края. Цвет инвертируется, как в шапке
-   (белый с difference), поэтому читается и на светлых, и на тёмных местах картинки. */
+   относительно карточки до отступа 20px от нижнего края. Цвет подбирается под фон (см. --ink ниже),
+   поэтому подпись читается и на светлых, и на тёмных местах картинки. */
 .work__info {
   grid-area: 1 / 1;
   align-self: center;
@@ -942,9 +942,16 @@ html.is-loading .loader {
   justify-content: space-between;
   align-items: flex-start;
   margin: 0 calc(20 * var(--u)) calc(20 * var(--u));
-  color: #fff;
-  mix-blend-mode: difference;
   pointer-events: none;
+}
+
+/* Цвет подписи (--ink) и тень (--ink-shadow) выбирает js/main.js по яркости картинки под текстом:
+   белый на тёмном, почти чёрный на светлом (выбирается тот, у кого контраст выше) */
+.work__name,
+.work__tags {
+  color: var(--ink, #fff);
+  text-shadow: var(--ink-shadow, 0 0 14px rgb(0 0 0 / 0.35));
+  transition: color 0.2s ease;
 }
 
 .work__name {
@@ -963,12 +970,6 @@ html.is-loading .loader {
   display: block;
 }
 
-/* Кнопка «View all works» по центру под сеткой (та же белая кнопка, что и в hero) */
-.works__more {
-  display: flex;
-  width: fit-content;
-  margin: calc(48 * var(--u)) auto 0;
-}
 
 
 
@@ -1590,9 +1591,6 @@ html.is-loading .loader {
     padding: 0 calc(10 * var(--u));
   }
 
-  .works__more {
-    margin-top: calc(44 * var(--u));
-  }
 
   /* Линии на белом (блок Services): 1px, чуть темнее, чтобы не пропали */
   .works__lines span {
