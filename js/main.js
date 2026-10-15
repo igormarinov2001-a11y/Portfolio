@@ -643,34 +643,6 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
 });
 
 
-// Бегущая строка в карточках проектов. Строит ленту из data-marquee: части через «|»
-// (например, «View case study|2026») чередуются по кругу, каждая — отдельный элемент.
-// Две одинаковые группы подряд дают бесшовную петлю (анимация в CSS, .marquee__track).
-document.querySelectorAll('[data-marquee]').forEach((el) => {
-  const parts = el.dataset.marquee.split('|');
-  const REPEAT = 6; // сколько раз повторяем набор частей в группе (должно перекрывать ширину карточки)
-
-  const makeGroup = () => {
-    const group = document.createElement('div');
-    group.className = 'marquee__group';
-    for (let i = 0; i < REPEAT; i++) {
-      parts.forEach((text, index) => {
-        const item = document.createElement('span');
-        item.className = index % 2 === 1 ? 'marquee__item marquee__item--serif' : 'marquee__item';
-        item.textContent = text;
-        group.append(item);
-      });
-    }
-    return group;
-  };
-
-  const track = document.createElement('div');
-  track.className = 'marquee__track';
-  track.append(makeGroup(), makeGroup());
-  el.append(track);
-});
-
-
 // Светлый блок Services идёт на тёмной странице. Пока он под шапкой, ставим html.is-over-works:
 // на телефоне инверсия шапки (mix-blend-mode) включается только здесь, потому что в остальных
 // местах она дорогая для iPhone и давала рывки при скролле (на десктопе шапка инвертируется всегда).
