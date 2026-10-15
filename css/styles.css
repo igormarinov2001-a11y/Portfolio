@@ -1794,16 +1794,17 @@ html.is-loading .loader {
     transition: visibility 0s linear 0.6s;
   }
 
-  .nav::after { /* затемнение страницы под панелью */
+  /* Затемнение страницы: на весь экран и под синей панелью (z-index: -1 внутри меню), поэтому
+     пока панель ещё опускается или уезжает, оно ровное и нигде не обрезается по её краю.
+     Клик по затемнению ловит само меню (см. js/main.js). */
+  .nav::after {
     content: "";
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    height: 100vh;
+    position: fixed;
+    inset: 0;
+    z-index: -1;
     background: rgb(11 11 11 / 0.64);
     opacity: 0;
-    transition: opacity 0.4s ease;
+    transition: opacity 0.5s ease;
   }
 
   html.is-menu-open .nav::after {
