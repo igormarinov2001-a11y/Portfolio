@@ -945,29 +945,15 @@ html.is-loading .loader {
   pointer-events: none;
 }
 
-/* Два слоя подписи: белый и почти чёрный. js/main.js накладывает на них маски по яркости картинки:
-   белый виден там, где фон тёмный, тёмный там, где светлый. Если масок нет (до загрузки картинки
-   или в браузере без поддержки), виден только белый. Тени у текста нет: она давала «подложку». */
-.work__name,
-.work__tags {
-  display: grid;
-}
-
-.ink {
-  grid-area: 1 / 1;
-}
-
-.ink--light {
+/* Каждая буква подписи (<span class="ch">, их создаёт js/main.js) белая; на светлом месте картинки
+   js добавляет is-dark, и буква становится почти чёрной. Тени у текста нет: она давала «подложку». */
+.ch {
   color: #fff;
+  transition: color 0.12s ease;
 }
 
-.ink--dark {
+.ch.is-dark {
   color: #0b0b0b;
-  visibility: hidden;
-}
-
-.is-masked .ink--dark {
-  visibility: visible;
 }
 
 .work__name {
@@ -982,7 +968,7 @@ html.is-loading .loader {
   line-height: calc(13.5 * var(--u));
 }
 
-.work__tags span {
+.work__tags > span {
   display: block;
 }
 
