@@ -643,33 +643,104 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
 });
 
 
-// Подписи карточек Works (название и теги) подстраивают цвет под картинку под ними. Инверсия
-// (mix-blend-mode: difference) на средне-серых местах давала серый текст на сером и текст
-// сливался, поэтому цвет считаем сами: берём яркость картинки в том месте, где сейчас стоит
-// подпись (она едет по карточке при скролле), и выбираем белый или почти чёрный, смотря у кого
-// выше контраст (WCAG). Чтобы цвет не дёргался на границе, переключаем с запасом (гистерезис).
+// Подписи карточек Works (название и теги): инверсия по пикселям, как у шапки, но с гарантированным
+// контрастом. mix-blend-mode: difference на средне-серых местах давал серый на сером, поэтому
+// делаем так: у каждой подписи два слоя, белый и почти чёрный. Из картинки карточки строится
+// карта яркости (чуть размытая), по ней два маски: белый слой виден там, где картинка тёмная,
+// тёмный слой там, где светлая. Подпись едет по карточке при скролле, поэтому положение масок
+// обновляется на каждом кадре, и каждая буква (или даже часть буквы) меняет цвет ровно в том месте,
+// где под ней меняется фон.
 (() => {
-  const cards = [...document.querySelectorAll('.work')].map((card) => {
-    const img = card.querySelector('img');
-    const inks = [...card.querySelectorAll('.work__name, .work__tags')].map((el) => ({ el, dark: false }));
-    return { card, img, inks, map: null };
-  });
+  const MAP_W = 360; // ширина карты яркости
+  const BLUR = 3; // размытие карты (в её пикселях), чтобы буквы переключались плавно, без дрожи
+  const THRESHOLD = 0.179; // яркость, где контраст белого и чёрного одинаковый
+  const SOFT = 0.03; // ширина плавного перехода вокруг порога
+
+  const cards = [...document.querySelectorAll('.work')].map((card) => ({
+    card,
+    img: card.querySelector('img'),
+    inks: [...card.querySelectorAll('.work__name, .work__tags')],
+    layers: [],
+    ready: false,
+  }));
   if (!cards.length) return;
 
-  const LIGHT = '#fff';
-  const DARK = '#0b0b0b';
-  const SIZE = 96; // ширина карты яркости: хватает, чтобы усреднить фон под текстом
+  // Каждая подпись получает два слоя: белый и тёмный (копия для вспомогательных технологий скрыта)
+  cards.forEach((item) => {
+    item.inks.forEach((el) => {
+      const light = document.createElement('span');
+      light.className = 'ink ink--light';
+      light.append(...el.childNodes);
+      const dark = light.cloneNode(true);
+      dark.className = 'ink ink--dark';
+      dark.setAttribute('aria-hidden', 'true');
+      el.append(light, dark);
+      item.layers.push({ el, light, dark });
+    });
+  });
 
   const lin = (v) => {
     const c = v / 255;
     return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
   };
 
-  const buildMap = (item) => {
+  // Размытие по Гауссу (по горизонтали и вертикали) для карты яркости
+  const blur = (src, w, h, sigma) => {
+    const r = Math.ceil(sigma * 2.5);
+    const kernel = [];
+    let sum = 0;
+    for (let i = -r; i <= r; i += 1) {
+      const v = Math.exp(-(i * i) / (2 * sigma * sigma));
+      kernel.push(v);
+      sum += v;
+    }
+    const tmp = new Float32Array(w * h);
+    const out = new Float32Array(w * h);
+    for (let y = 0; y < h; y += 1) {
+      for (let x = 0; x < w; x += 1) {
+        let acc = 0;
+        for (let k = -r; k <= r; k += 1) {
+          const xx = Math.min(w - 1, Math.max(0, x + k));
+          acc += src[y * w + xx] * kernel[k + r];
+        }
+        tmp[y * w + x] = acc / sum;
+      }
+    }
+    for (let y = 0; y < h; y += 1) {
+      for (let x = 0; x < w; x += 1) {
+        let acc = 0;
+        for (let k = -r; k <= r; k += 1) {
+          const yy = Math.min(h - 1, Math.max(0, y + k));
+          acc += tmp[yy * w + x] * kernel[k + r];
+        }
+        out[y * w + x] = acc / sum;
+      }
+    }
+    return out;
+  };
+
+  const smooth = (edge0, edge1, x) => {
+    const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
+    return t * t * (3 - 2 * t);
+  };
+
+  const toUrl = (alpha, w, h) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    const data = ctx.createImageData(w, h);
+    for (let i = 0; i < w * h; i += 1) data.data[i * 4 + 3] = Math.round(alpha[i] * 255);
+    ctx.putImageData(data, 0, 0);
+    return `url(${canvas.toDataURL('image/png')})`;
+  };
+
+  // Строит две маски из картинки: где она тёмная (для белого слоя) и где светлая (для тёмного)
+  const build = (item) => {
     const { img } = item;
-    if (!img.naturalWidth) return;
-    const w = SIZE;
-    const h = Math.max(1, Math.round((SIZE * img.naturalHeight) / img.naturalWidth));
+    if (!img.naturalWidth) return false;
+    const w = MAP_W;
+    const h = Math.max(1, Math.round((MAP_W * img.naturalHeight) / img.naturalWidth));
     const canvas = document.createElement('canvas');
     canvas.width = w;
     canvas.height = h;
@@ -681,34 +752,51 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
       for (let i = 0; i < w * h; i += 1) {
         lum[i] = 0.2126 * lin(px[i * 4]) + 0.7152 * lin(px[i * 4 + 1]) + 0.0722 * lin(px[i * 4 + 2]);
       }
-      item.map = { w, h, lum };
+      const soft = blur(lum, w, h, BLUR);
+      const darkBg = new Float32Array(w * h); // 1 там, где фон тёмный
+      const lightBg = new Float32Array(w * h);
+      for (let i = 0; i < w * h; i += 1) {
+        const d = 1 - smooth(THRESHOLD - SOFT, THRESHOLD + SOFT, soft[i]);
+        darkBg[i] = d;
+        lightBg[i] = 1 - d;
+      }
+      const darkUrl = toUrl(darkBg, w, h);
+      const lightUrl = toUrl(lightBg, w, h);
+      item.layers.forEach(({ light, dark }) => {
+        [[light, darkUrl], [dark, lightUrl]].forEach(([layer, url]) => {
+          layer.style.webkitMaskImage = url;
+          layer.style.maskImage = url;
+          layer.style.webkitMaskRepeat = 'no-repeat';
+          layer.style.maskRepeat = 'no-repeat';
+        });
+        light.parentElement.classList.add('is-masked');
+      });
+      return true;
     } catch (e) {
-      item.map = null; // картинка с другого домена: оставляем белый текст с тенью
+      return false; // например, картинка с другого домена: остаётся белый текст с тенью
     }
   };
 
-  // Средняя яркость картинки под прямоугольником (в координатах окна)
-  const lumUnder = (item, rect) => {
-    const { map, card, img } = item;
+  // Ставит маски так, чтобы они лежали ровно поверх картинки, как она видна в карточке (object-fit: cover)
+  const place = (item) => {
+    const { card, img } = item;
     const box = card.getBoundingClientRect();
-    const s = Math.max(box.width / img.naturalWidth, box.height / img.naturalHeight); // object-fit: cover
-    const ox = (box.width - img.naturalWidth * s) / 2;
-    const oy = (box.height - img.naturalHeight * s) / 2;
-    const k = map.w / img.naturalWidth;
-    const pad = 10;
-    const x0 = Math.max(0, Math.floor(((rect.left - pad - box.left - ox) / s) * k));
-    const x1 = Math.min(map.w, Math.ceil(((rect.right + pad - box.left - ox) / s) * k));
-    const y0 = Math.max(0, Math.floor(((rect.top - pad - box.top - oy) / s) * k));
-    const y1 = Math.min(map.h, Math.ceil(((rect.bottom + pad - box.top - oy) / s) * k));
-    let sum = 0;
-    let n = 0;
-    for (let y = y0; y < y1; y += 1) {
-      for (let x = x0; x < x1; x += 1) {
-        sum += map.lum[y * map.w + x];
-        n += 1;
-      }
-    }
-    return n ? sum / n : null;
+    const scale = Math.max(box.width / img.naturalWidth, box.height / img.naturalHeight);
+    const dw = img.naturalWidth * scale;
+    const dh = img.naturalHeight * scale;
+    const left = box.left + (box.width - dw) / 2;
+    const top = box.top + (box.height - dh) / 2;
+    item.layers.forEach(({ el, light, dark }) => {
+      const rect = el.getBoundingClientRect();
+      const size = `${dw.toFixed(1)}px ${dh.toFixed(1)}px`;
+      const pos = `${(left - rect.left).toFixed(1)}px ${(top - rect.top).toFixed(1)}px`;
+      [light, dark].forEach((layer) => {
+        layer.style.webkitMaskSize = size;
+        layer.style.maskSize = size;
+        layer.style.webkitMaskPosition = pos;
+        layer.style.maskPosition = pos;
+      });
+    });
   };
 
   let frame = 0;
@@ -718,21 +806,8 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
     cards.forEach((item) => {
       const box = item.card.getBoundingClientRect();
       if (box.bottom < -50 || box.top > vh + 50) return; // карточка не на экране
-      if (!item.map) buildMap(item);
-      if (!item.map) return;
-      item.inks.forEach((ink) => {
-        const L = lumUnder(item, ink.el.getBoundingClientRect());
-        if (L === null) return;
-        const white = 1.05 / (L + 0.05); // контраст белого текста с фоном
-        const dark = (L + 0.05) / (0.0033 + 0.05); // контраст #0b0b0b с фоном
-        let next = ink.dark;
-        if (ink.dark && white > dark * 1.12) next = false;
-        else if (!ink.dark && dark > white * 1.12) next = true;
-        if (next === ink.dark && ink.el.style.getPropertyValue('--ink')) return;
-        ink.dark = next;
-        ink.el.style.setProperty('--ink', next ? DARK : LIGHT);
-        ink.el.style.setProperty('--ink-shadow', next ? '0 0 14px rgb(255 255 255 / 0.3)' : '0 0 14px rgb(0 0 0 / 0.35)');
-      });
+      if (!item.ready) item.ready = build(item);
+      if (item.ready) place(item);
     });
   };
 

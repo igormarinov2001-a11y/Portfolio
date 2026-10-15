@@ -945,13 +945,31 @@ html.is-loading .loader {
   pointer-events: none;
 }
 
-/* Цвет подписи (--ink) и тень (--ink-shadow) выбирает js/main.js по яркости картинки под текстом:
-   белый на тёмном, почти чёрный на светлом (выбирается тот, у кого контраст выше) */
+/* Два слоя подписи: белый и почти чёрный. js/main.js накладывает на них маски по яркости картинки:
+   белый виден там, где фон тёмный, тёмный там, где светлый. Если масок нет (до загрузки картинки
+   или в браузере без поддержки), виден только белый с тенью. */
 .work__name,
 .work__tags {
-  color: var(--ink, #fff);
-  text-shadow: var(--ink-shadow, 0 0 14px rgb(0 0 0 / 0.35));
-  transition: color 0.2s ease;
+  display: grid;
+}
+
+.ink {
+  grid-area: 1 / 1;
+}
+
+.ink--light {
+  color: #fff;
+  text-shadow: 0 0 14px rgb(0 0 0 / 0.3);
+}
+
+.ink--dark {
+  color: #0b0b0b;
+  text-shadow: 0 0 14px rgb(255 255 255 / 0.3);
+  visibility: hidden;
+}
+
+.is-masked .ink--dark {
+  visibility: visible;
 }
 
 .work__name {
