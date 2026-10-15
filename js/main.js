@@ -643,54 +643,40 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
 });
 
 
-// Подписи карточек Works (название и теги) подстраивают цвет под картинку под ними. Каждая буква
-// красится отдельно: белая на тёмном месте картинки и почти чёрная на светлом, поэтому, когда часть
-// слова попадает на другой фон, меняют цвет только эти буквы, а не вся подпись. Яркость берём из
-// картинки (карта яркости), положение каждой буквы считаем по положению подписи, которая едет по
-// карточке при скролле. Решение по букве всегда однозначное (без полупрозрачных смесей), а чтобы
-// цвет не мигал на границе, переключаем с запасом (гистерезис). mix-blend-mode: difference не
-// годится: на средне-сером он даёт серый текст на сером.
+// Подписи карточек Works (название и теги): инверсия по пикселям, как у шапки, но с гарантированным
+// контрастом. mix-blend-mode: difference на средне-серых местах давал серый на сером, поэтому
+// делаем так: у каждой подписи два слоя, белый и почти чёрный. Из картинки карточки строится
+// карта яркости (чуть размытая), по ней два маски: белый слой виден там, где картинка тёмная,
+// тёмный слой там, где светлая. Подпись едет по карточке при скролле, поэтому положение масок
+// обновляется на каждом кадре, и каждая буква (или даже часть буквы) меняет цвет ровно в том месте,
+// где под ней меняется фон.
 (() => {
-  const MAP_W = 480; // ширина карты яркости
-  const THRESHOLD = 0.22; // яркость фона (линейная): ниже текст белый, выше тёмный
-  const MARGIN = 0.03; // запас переключения (гистерезис)
+  const MAP_W = 720; // ширина карты яркости (чем больше, тем чётче граница между белым и тёмным)
+  const BLUR = 2; // размытие карты (в её пикселях): убирает зерно картинки, чтобы граница не рябила
+  const THRESHOLD = 0.22; // яркость фона (линейная): темнее белый текст, светлее тёмный
+  const SOFT = 0.0006; // ширина перехода вокруг порога: почти ноль, граница между белым и тёмным резкая, без серой смеси
 
   const cards = [...document.querySelectorAll('.work')].map((card) => ({
     card,
     img: card.querySelector('img'),
-    info: card.querySelector('.work__info'),
-    chars: [],
-    map: null,
-    laidOut: false,
+    inks: [...card.querySelectorAll('.work__name, .work__tags')],
+    layers: [],
+    ready: false,
   }));
   if (!cards.length) return;
 
-  // Режем текст подписей на буквы (каждая в своём <span class="ch">)
-  const split = (node, out) => {
-    [...node.childNodes].forEach((child) => {
-      if (child.nodeType === Node.TEXT_NODE) {
-        const frag = document.createDocumentFragment();
-        for (const ch of child.textContent) {
-          if (ch === ' ') {
-            frag.append(' ');
-          } else {
-            const span = document.createElement('span');
-            span.className = 'ch';
-            span.textContent = ch;
-            frag.append(span);
-            out.push({ el: span, dark: false, rel: null });
-          }
-        }
-        child.replaceWith(frag);
-      } else if (child.nodeType === Node.ELEMENT_NODE) {
-        split(child, out);
-      }
-    });
-  };
+  // Каждая подпись получает два слоя: белый и тёмный (копия для вспомогательных технологий скрыта)
   cards.forEach((item) => {
-    const label = item.info.textContent.replace(/\s+/g, ' ').trim();
-    item.info.setAttribute('aria-label', label);
-    split(item.info, item.chars);
+    item.inks.forEach((el) => {
+      const light = document.createElement('span');
+      light.className = 'ink ink--light';
+      light.append(...el.childNodes);
+      const dark = light.cloneNode(true);
+      dark.className = 'ink ink--dark';
+      dark.setAttribute('aria-hidden', 'true');
+      el.append(light, dark);
+      item.layers.push({ el, light, dark });
+    });
   });
 
   const lin = (v) => {
@@ -698,9 +684,61 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
     return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
   };
 
-  const buildMap = (item) => {
+  // Размытие по Гауссу (по горизонтали и вертикали) для карты яркости
+  const blur = (src, w, h, sigma) => {
+    const r = Math.ceil(sigma * 2.5);
+    const kernel = [];
+    let sum = 0;
+    for (let i = -r; i <= r; i += 1) {
+      const v = Math.exp(-(i * i) / (2 * sigma * sigma));
+      kernel.push(v);
+      sum += v;
+    }
+    const tmp = new Float32Array(w * h);
+    const out = new Float32Array(w * h);
+    for (let y = 0; y < h; y += 1) {
+      for (let x = 0; x < w; x += 1) {
+        let acc = 0;
+        for (let k = -r; k <= r; k += 1) {
+          const xx = Math.min(w - 1, Math.max(0, x + k));
+          acc += src[y * w + xx] * kernel[k + r];
+        }
+        tmp[y * w + x] = acc / sum;
+      }
+    }
+    for (let y = 0; y < h; y += 1) {
+      for (let x = 0; x < w; x += 1) {
+        let acc = 0;
+        for (let k = -r; k <= r; k += 1) {
+          const yy = Math.min(h - 1, Math.max(0, y + k));
+          acc += tmp[yy * w + x] * kernel[k + r];
+        }
+        out[y * w + x] = acc / sum;
+      }
+    }
+    return out;
+  };
+
+  const smooth = (edge0, edge1, x) => {
+    const t = Math.min(1, Math.max(0, (x - edge0) / (edge1 - edge0)));
+    return t * t * (3 - 2 * t);
+  };
+
+  const toUrl = (alpha, w, h) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext('2d');
+    const data = ctx.createImageData(w, h);
+    for (let i = 0; i < w * h; i += 1) data.data[i * 4 + 3] = Math.round(alpha[i] * 255);
+    ctx.putImageData(data, 0, 0);
+    return `url(${canvas.toDataURL('image/png')})`;
+  };
+
+  // Строит две маски из картинки: где она тёмная (для белого слоя) и где светлая (для тёмного)
+  const build = (item) => {
     const { img } = item;
-    if (!img.naturalWidth) return;
+    if (!img.naturalWidth) return false;
     const w = MAP_W;
     const h = Math.max(1, Math.round((MAP_W * img.naturalHeight) / img.naturalWidth));
     const canvas = document.createElement('canvas');
@@ -714,42 +752,51 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
       for (let i = 0; i < w * h; i += 1) {
         lum[i] = 0.2126 * lin(px[i * 4]) + 0.7152 * lin(px[i * 4 + 1]) + 0.0722 * lin(px[i * 4 + 2]);
       }
-      item.map = { w, h, lum };
-    } catch (e) {
-      item.map = null; // например, картинка с другого домена: остаётся белый текст
-    }
-  };
-
-  // Положение каждой буквы внутри подписи (меняется только при смене размера окна)
-  const layout = (item) => {
-    const base = item.info.getBoundingClientRect();
-    item.chars.forEach((c) => {
-      const r = c.el.getBoundingClientRect();
-      c.rel = { left: r.left - base.left, top: r.top - base.top, width: r.width, height: r.height };
-    });
-    item.laidOut = true;
-  };
-
-  const lumUnder = (item, rect) => {
-    const { map, card, img } = item;
-    const box = card.getBoundingClientRect();
-    const s = Math.max(box.width / img.naturalWidth, box.height / img.naturalHeight); // object-fit: cover
-    const ox = (box.width - img.naturalWidth * s) / 2;
-    const oy = (box.height - img.naturalHeight * s) / 2;
-    const k = map.w / img.naturalWidth;
-    const x0 = Math.max(0, Math.floor(((rect.left - box.left - ox) / s) * k));
-    const x1 = Math.min(map.w, Math.max(x0 + 1, Math.ceil(((rect.left + rect.width - box.left - ox) / s) * k)));
-    const y0 = Math.max(0, Math.floor(((rect.top - box.top - oy) / s) * k));
-    const y1 = Math.min(map.h, Math.max(y0 + 1, Math.ceil(((rect.top + rect.height - box.top - oy) / s) * k)));
-    let sum = 0;
-    let n = 0;
-    for (let y = y0; y < y1; y += 1) {
-      for (let x = x0; x < x1; x += 1) {
-        sum += map.lum[y * map.w + x];
-        n += 1;
+      const soft = blur(lum, w, h, BLUR);
+      const darkBg = new Float32Array(w * h); // 1 там, где фон тёмный
+      const lightBg = new Float32Array(w * h);
+      for (let i = 0; i < w * h; i += 1) {
+        const d = 1 - smooth(THRESHOLD - SOFT, THRESHOLD + SOFT, soft[i]);
+        darkBg[i] = d;
+        lightBg[i] = 1 - d;
       }
+      const darkUrl = toUrl(darkBg, w, h);
+      const lightUrl = toUrl(lightBg, w, h);
+      item.layers.forEach(({ light, dark }) => {
+        [[light, darkUrl], [dark, lightUrl]].forEach(([layer, url]) => {
+          layer.style.webkitMaskImage = url;
+          layer.style.maskImage = url;
+          layer.style.webkitMaskRepeat = 'no-repeat';
+          layer.style.maskRepeat = 'no-repeat';
+        });
+        light.parentElement.classList.add('is-masked');
+      });
+      return true;
+    } catch (e) {
+      return false; // например, картинка с другого домена: остаётся белый текст
     }
-    return n ? sum / n : null;
+  };
+
+  // Ставит маски так, чтобы они лежали ровно поверх картинки, как она видна в карточке (object-fit: cover)
+  const place = (item) => {
+    const { card, img } = item;
+    const box = card.getBoundingClientRect();
+    const scale = Math.max(box.width / img.naturalWidth, box.height / img.naturalHeight);
+    const dw = img.naturalWidth * scale;
+    const dh = img.naturalHeight * scale;
+    const left = box.left + (box.width - dw) / 2;
+    const top = box.top + (box.height - dh) / 2;
+    item.layers.forEach(({ el, light, dark }) => {
+      const rect = el.getBoundingClientRect();
+      const size = `${dw.toFixed(1)}px ${dh.toFixed(1)}px`;
+      const pos = `${(left - rect.left).toFixed(1)}px ${(top - rect.top).toFixed(1)}px`;
+      [light, dark].forEach((layer) => {
+        layer.style.webkitMaskSize = size;
+        layer.style.maskSize = size;
+        layer.style.webkitMaskPosition = pos;
+        layer.style.maskPosition = pos;
+      });
+    });
   };
 
   let frame = 0;
@@ -759,24 +806,8 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
     cards.forEach((item) => {
       const box = item.card.getBoundingClientRect();
       if (box.bottom < -50 || box.top > vh + 50) return; // карточка не на экране
-      if (!item.map) buildMap(item);
-      if (!item.map) return;
-      if (!item.laidOut) layout(item);
-      const base = item.info.getBoundingClientRect();
-      item.chars.forEach((c) => {
-        const L = lumUnder(item, {
-          left: base.left + c.rel.left,
-          top: base.top + c.rel.top,
-          width: c.rel.width,
-          height: c.rel.height,
-        });
-        if (L === null) return;
-        const next = c.dark ? L > THRESHOLD - MARGIN : L > THRESHOLD + MARGIN;
-        if (next !== c.dark) {
-          c.dark = next;
-          c.el.classList.toggle('is-dark', next);
-        }
-      });
+      if (!item.ready) item.ready = build(item);
+      if (item.ready) place(item);
     });
   };
 
@@ -789,14 +820,7 @@ document.querySelectorAll('[data-scrub]').forEach((block) => {
     else item.img.addEventListener('load', update, { once: true });
   });
   window.addEventListener('scroll', update, { passive: true });
-  window.addEventListener('resize', () => {
-    cards.forEach((item) => { item.laidOut = false; });
-    update();
-  });
-  if (document.fonts) document.fonts.ready.then(() => {
-    cards.forEach((item) => { item.laidOut = false; });
-    update();
-  });
+  window.addEventListener('resize', update);
   update();
 })();
 
